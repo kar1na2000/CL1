@@ -129,9 +129,6 @@ class IDEXFetchExceptionTest extends AnyFreeSpec with ChiselScalatestTester {
 class EXCPIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester {
   "illegal instruction trap reuses the normal exception redirect and CSR update path" in {
     test(new Cl1EXCP()) { dut =>
-      dut.io.ext_irq.poke(false.B)
-      dut.io.sft_irq.poke(false.B)
-      dut.io.tmr_irq.poke(false.B)
       dut.io.next_pc.poke(0.U)
       dut.io.dx_valid.poke(false.B)
       dut.io.ifu_halt_ack.poke(true.B)
@@ -142,7 +139,8 @@ class EXCPIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester 
       dut.io.excp2Csr.meie.poke(false.B)
       dut.io.excp2Csr.msie.poke(false.B)
       dut.io.excp2Csr.mtie.poke(false.B)
-      dut.io.excp2Csr.mie.poke(false.B)
+      dut.io.excp2Csr.mstatus_mie.poke(false.B)
+      dut.io.excp2Csr.mip.poke(0.U)
       dut.io.excp2Csr.mepc.poke(0.U)
       dut.io.excp2Csr.mcause.poke(0.U)
       dut.io.excp2Csr.mtvec.poke("h20000000".U)

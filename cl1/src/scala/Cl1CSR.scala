@@ -74,6 +74,10 @@ class CSRIO() extends Bundle {
   val instr = Input(UInt(32.W))
   val c_instr = Input(UInt(16.W))
 
+  val ext_irq = Input(Bool())
+  val sft_irq = Input(Bool())
+  val tmr_irq = Input(Bool())
+
   val dbg_intf = Flipped(new Dbg2CsrSignal)
   val excp_intf = Flipped(new excp2Csr)
 }
@@ -96,9 +100,9 @@ class Cl1CSR() extends Module {
   val dpc_update    = dbg.dpc_update
   val dbg_cause     = dbg.dbg_cause
 
-  val ext_irq     = io.excp_intf.ext_irq
-  val sft_irq     = io.excp_intf.sft_irq
-  val tmr_irq     = io.excp_intf.tmr_irq
+  val ext_irq     = io.ext_irq
+  val sft_irq     = io.sft_irq
+  val tmr_irq     = io.tmr_irq
 
   val cmt_epc_en    = io.excp_intf.cmt_epc_en
   val cmt_epc_n     = io.excp_intf.cmt_epc_n
@@ -391,10 +395,11 @@ class Cl1CSR() extends Module {
   io.excp_intf.mtvec := mtvec
   io.excp_intf.mepc  := mepc
   io.excp_intf.mcause := mcause
-  io.excp_intf.mie   := mstatus_mie
+  io.excp_intf.mstatus_mie := mstatus_mie
   io.excp_intf.meie  := meie
   io.excp_intf.msie  := msie
   io.excp_intf.mtie  := mtie
+  io.excp_intf.mip   := mip
 
   io.rdValue := csr_rdat
 

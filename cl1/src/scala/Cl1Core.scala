@@ -106,6 +106,9 @@ class Cl1Core extends Module {
   csr.io.instr  := wbStage.io.inst
   csr.io.c_instr := wbStage.io.cInst
   csr.io.wrValue := wbStage.io.csrWdat
+  csr.io.ext_irq := io.ext_irq
+  csr.io.sft_irq := io.sft_irq
+  csr.io.tmr_irq := io.tmr_irq
 
   dm.io.dbg2csr <> csr.io.dbg_intf
 
@@ -143,9 +146,6 @@ class Cl1Core extends Module {
   }
   excp.io.excp2Csr  <> csr.io.excp_intf
 
-  excp.io.ext_irq := io.ext_irq
-  excp.io.sft_irq := io.sft_irq
-  excp.io.tmr_irq := io.tmr_irq
   io.core_wfi     := excp.io.core_wfi
 
 /*
