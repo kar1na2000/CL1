@@ -12,6 +12,7 @@ import chisel3.util.experimental.BoringUtils
 
 class Cl1Core extends Module {
   val io = IO(new Bundle {
+    val always_on_clock = Input(Clock())
     val dbg_req_i = Input(Bool())
     val ext_irq   = Input(Bool())
     val sft_irq   = Input(Bool())
@@ -103,6 +104,7 @@ class Cl1Core extends Module {
   csr.io.wrAddr := writeCSR
   csr.io.wen    := csrWen
 
+  csr.io.always_on_clock := io.always_on_clock
   csr.io.instr  := wbStage.io.inst
   csr.io.c_instr := wbStage.io.cInst
   csr.io.wrValue := wbStage.io.csrWdat

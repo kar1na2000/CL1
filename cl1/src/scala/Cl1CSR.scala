@@ -65,6 +65,8 @@ object CSRs {
 
 
 class CSRIO() extends Bundle {
+  val always_on_clock = Input(Clock())
+
   val rdAddr = Input(UInt(12.W))
   val rdValue = Output(UInt(32.W))
   val wrAddr = Input(UInt(12.W))
@@ -147,9 +149,10 @@ class Cl1CSR() extends Module {
   }
 
   val lcofip = WireInit(false.B)
-  val meip = RegNext(ext_irq, false.B)
-  val mtip = RegNext(tmr_irq, false.B)
-  val msip = RegNext(sft_irq, false.B)
+  // Keep interrupt pending flops on the ungated clock so WFI can still wake the core.
+  val meip = withClock(io.always_on_clock) { RegNext(ext_irq, false.B) }
+  val mtip = withClock(io.always_on_clock) { RegNext(tmr_irq, false.B) }
+  val msip = withClock(io.always_on_clock) { RegNext(sft_irq, false.B) }
   val seip = WireInit(false.B)
   val stip = WireInit(false.B)
   val ssip = WireInit(false.B)

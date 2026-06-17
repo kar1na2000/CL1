@@ -49,6 +49,7 @@ class Cl1Top extends Module{
   }
   
 
+  core.io.always_on_clock := clock
   core.io.dbg_req_i := io.dbg_req_i
   core.io.ext_irq   := io.ext_irq
   core.io.sft_irq   := io.sft_irq
