@@ -30,7 +30,7 @@ cl1_core/
 │       │   ├── Cl1WBStage.scala   # 写回阶段
 │       │   ├── Cl1ALU.scala       # 算术逻辑单元
 │       │   ├── Cl1MDU.scala       # 乘除单元
-│       │   ├── Cl1LSU.scala       # 访存单元
+│       │   ├── CL1LSU.scala       # 访存单元
 │       │   ├── Cl1CSR.scala       # CSR 寄存器
 │       │   ├── Cl1ICACHE.scala    # 指令缓存
 │       │   ├── Cl1DCACHE.scala    # 数据缓存
