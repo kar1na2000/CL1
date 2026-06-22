@@ -39,6 +39,8 @@ class Platform:
             str(self.ram_size),
             "--load-addr",
             hex32(int_value(load_addr) if load_addr is not None else self.load_addr),
+            "--boot-addr",
+            hex32(self.boot_addr),
         ]
         if self.uart_addr is not None:
             args.extend(["--uart-addr", hex32(self.uart_addr)])

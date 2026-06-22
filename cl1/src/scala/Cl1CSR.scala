@@ -82,6 +82,8 @@ class CSRIO() extends Bundle {
 
   val dbg_intf = Flipped(new Dbg2CsrSignal)
   val excp_intf = Flipped(new excp2Csr)
+
+  val wb_commit = Input(Bool())
 }
 
 
@@ -319,15 +321,29 @@ class Cl1CSR() extends Module {
   val mtval     = RegEnable(mtval_wdata, 0.U(32.W), wen_mtval)
 
   val misa      = WireInit("h40001104".U(32.W))
-  val mcycle    = RegEnable(csr_wdat, 0.U(32.W), wen_mcycle)
-  val mcycleh   = RegEnable(csr_wdat, 0.U(32.W), wen_mcycleh)
-  val minstret  = RegEnable(csr_wdat, 0.U(32.W), wen_minstret)
-  val minstreth = RegEnable(csr_wdat, 0.U(32.W), wen_minstreth)
   val mvendorid = WireInit(0.U(32.W))
   val marchid   = WireInit(5.U(32.W))
   val mimpid    = WireInit(0.U(32.W))
   val mhartid   = WireInit(0.U(32.W))
   val mconfigptr = WireInit(0.U(32.W))
+
+  val mcycle_wdata = Wire(UInt(32.W))
+  val mcycle    = RegEnable(mcycle_wdata, 0.U(32.W), true.B)
+  val mcycle_carry = !wen_mcycle && mcycle === "hffffffff".U
+  mcycle_wdata  := Mux(wen_mcycle, csr_wdat, (mcycle + 1.U(32.W)))
+
+  val mcycleh_wdata = Wire(UInt(32.W))
+  val mcycleh   = RegEnable(mcycleh_wdata, 0.U(32.W), wen_mcycleh || mcycle_carry)
+  mcycleh_wdata := Mux(wen_mcycleh, csr_wdat, (mcycleh + 1.U(32.W)))
+
+  val minstret_wdata = Wire(UInt(32.W))
+  val minstret  = RegEnable(minstret_wdata, 0.U(32.W), wen_minstret || io.wb_commit)
+  val minstret_carry = io.wb_commit && !wen_minstret && minstret === "hffffffff".U
+  minstret_wdata := Mux(wen_minstret, csr_wdat, (minstret + 1.U(32.W)))
+
+  val minstreth_wdata = Wire(UInt(32.W))
+  val minstreth = RegEnable(minstreth_wdata, 0.U(32.W), wen_minstreth || minstret_carry)
+  minstreth_wdata := Mux(wen_minstreth, csr_wdat, (minstreth + 1.U(32.W)))
 
 
   val allCSRs  = Seq(

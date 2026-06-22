@@ -83,7 +83,7 @@ verilog-sim:
 	$(MKDIR) $(VSRC_DIR)
 	@./patch/update-firtool.sh $(FIRTOOL_VERSION) $(FIRTOOL_PATCH_DIR)
 	CHISEL_FIRTOOL_PATH=$(FIRTOOL_PATCH_DIR)/firtool-$(FIRTOOL_VERSION)/bin \
-	CL1_TEST_MODE=$(CL1_TEST_MODE) CL1_PLATFORM=$(CL1_PLATFORM) CL1_RISCV_FORMAL_ALTOPS=false $(MILL) -i $(PRJ).runMain Elaborate --target-dir $(VSRC_DIR) --throw-on-first-error
+	CL1_TEST_MODE=$(CL1_TEST_MODE) CL1_PLATFORM=$(CL1_PLATFORM) CL1_FORMAL_VERIF=true CL1_RISCV_FORMAL_ALTOPS=false $(MILL) -i $(PRJ).runMain Elaborate --target-dir $(VSRC_DIR) --throw-on-first-error
 	sed -i '/difftest\.sv/d' $(VSRC_DIR)/$(CPUTOP).sv
 	sed -i '/Stat\.v/d' $(VSRC_DIR)/$(CPUTOP).sv
 

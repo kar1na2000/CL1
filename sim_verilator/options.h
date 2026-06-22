@@ -13,6 +13,7 @@ namespace cl1sim {
 inline constexpr uint32_t kCl1DefaultRamBase = 0x80000000u;
 inline constexpr uint64_t kCl1DefaultRamSize = 16ull * 1024ull * 1024ull;
 inline constexpr uint32_t kCl1DefaultLoadAddr = 0x80000000u;
+inline constexpr uint32_t kCl1DefaultBootAddr = 0x80000000u;
 inline constexpr bool kCl1HasDefaultUart = true;
 inline constexpr uint32_t kCl1DefaultUartAddr = 0x10000000u;
 inline constexpr bool kCl1HasDefaultHostExit = true;
@@ -26,6 +27,7 @@ struct Options {
   uint32_t ram_base = kCl1DefaultRamBase;
   uint64_t ram_size = kCl1DefaultRamSize;
   uint32_t load_addr = kCl1DefaultLoadAddr;
+  uint32_t boot_addr = kCl1DefaultBootAddr;
   bool has_uart = kCl1HasDefaultUart;
   uint32_t uart_addr = kCl1DefaultUartAddr;
   bool has_host_exit = kCl1HasDefaultHostExit;

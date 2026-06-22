@@ -1204,6 +1204,28 @@ def core_checks(binary: Path, platform: Platform, max_cycles: int) -> list[Check
     ]
 
 
+def cache_checks(binary: Path, max_cycles: int) -> list[CheckResult]:
+    return [
+        run_checked_command(
+            name="fence-i-self-modify",
+            group="core",
+            cmd=[str(binary), "--max-cycles", str(max_cycles), str(selftest_artifact("fence_i_self_modify_pass", "elf"))],
+            must_contain=["PASS", "host exit register write"],
+        ),
+        run_checked_command(
+            name="fence-keeps-icache",
+            group="core",
+            cmd=[
+                str(binary),
+                "--max-cycles",
+                str(max_cycles),
+                str(selftest_artifact("fence_does_not_invalidate_icache_pass", "elf")),
+            ],
+            must_contain=["PASS", "host exit register write"],
+        ),
+    ]
+
+
 def interrupt_checks(binary: Path, max_cycles: int) -> list[CheckResult]:
     results: list[CheckResult] = []
     interrupt_cases = [
@@ -1489,9 +1511,13 @@ def run_regression_suite(binary: Path, mode: str, platform: Platform, suite: str
         results.extend(harness_batch_checks(mode, platform, max_cycles))
     elif suite in ("selftest", "direct", "full"):
         results.extend(core_checks(binary, platform, max_cycles))
+        if mode == "cache":
+            results.extend(cache_checks(binary, max_cycles))
         results.extend(interrupt_checks(binary, max_cycles))
     elif suite == "all":
         results.extend(core_checks(binary, platform, max_cycles))
+        if mode == "cache":
+            results.extend(cache_checks(binary, max_cycles))
         results.extend(interrupt_checks(binary, max_cycles))
         results.extend(harness_checks(binary, platform, max_cycles))
         results.extend(harness_batch_checks(mode, platform, max_cycles))

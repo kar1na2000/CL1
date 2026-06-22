@@ -12,21 +12,28 @@ class DecoderTest extends AnyFreeSpec with ChiselScalatestTester {
       dut.io.inst.poke("h00000413".U(32.W))
       dut.io.out.jType.expect(J_XXX)
       dut.io.out.illegal.expect(false.B)
+      dut.io.out.fence.expect(false.B)
+      dut.io.out.fencei.expect(false.B)
 
       dut.io.inst.poke("h00000073".U(32.W))
       dut.io.out.csrType.expect(CSR_P)
       dut.io.out.illegal.expect(false.B)
+      dut.io.out.fence.expect(false.B)
+      dut.io.out.fencei.expect(false.B)
 
       dut.io.inst.poke("h0ff0000f".U(32.W))
       dut.io.out.fencei.expect(false.B)
+      dut.io.out.fence.expect(true.B)
       dut.io.out.illegal.expect(false.B)
 
       dut.io.inst.poke("h0000000f".U(32.W))
       dut.io.out.fencei.expect(false.B)
+      dut.io.out.fence.expect(true.B)
       dut.io.out.illegal.expect(false.B)
 
       dut.io.inst.poke("h0000100f".U(32.W))
       dut.io.out.fencei.expect(true.B)
+      dut.io.out.fence.expect(false.B)
       dut.io.out.illegal.expect(false.B)
 
       dut.io.inst.poke("hffffffff".U(32.W))

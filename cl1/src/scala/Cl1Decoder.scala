@@ -426,6 +426,13 @@ object FenceiField extends BoolDecodeField[InstructionPattern] {
   }
 }
 
+object FenceField extends BoolDecodeField[InstructionPattern] {
+  def name: String = "fence instruction"
+  def genTable(op: InstructionPattern): BitPat = {
+    if (op.name == "fence") BitPat(true.B) else BitPat(false.B)
+  }
+}
+
 class DecoderOutput extends Bundle {
 
   val immType  = Output(UInt(IMM_WIDTH.W))
@@ -439,6 +446,7 @@ class DecoderOutput extends Bundle {
   val csrType  = Output(UInt(CSR_WIDTH.W))
   val muldivOp   = Output(UInt(MD_WIDTH.W))
   val illegal  = Output(Bool())
+  val fence    = Output(Bool())
   val fencei   = Output(Bool())
 }
 
@@ -463,6 +471,7 @@ class Cl2Decoder extends Module {
   io.out.csrType := decodeResult(CSRField)
   io.out.muldivOp  := decodeResult(MDField)
   io.out.illegal := decodeResult(IllegalField)
+  io.out.fence   := decodeResult(FenceField)
   io.out.fencei  := decodeResult(FenceiField)
 
 

@@ -258,9 +258,11 @@ class Cl1IDEXStage extends Module with TrapCode {
   // mdu_in.bits.b2b   := mdu_b2b
   mdu_in.bits.b2b   := false.B
 
-  // fence.i
+  // fence.i & fence
   val dx_fencei    = ctrl.fencei
+  val dx_fence     = ctrl.fence
   val fencei_exec_done  = Wire(Bool())
+  val fence_exec_done = Wire(Bool())
   // Block younger memory and fence.i requests while an older LSU request is
   // still outstanding. The older request may later return an exception from WB.
   // Issuing another memory/cache-maintenance request before that result is known
@@ -278,21 +280,30 @@ class Cl1IDEXStage extends Module with TrapCode {
 
   val clean_dcache_done = Wire(Bool())
   val dcache_clean_req  = dx_valid && !clean_dcache_done && !dx_flush && dx_fencei && !dxHasTrap && !dx_stall && memNotOutStanding
-  val cleand_done_set   = io.dcache_req.fire
+  val cleand_done_set   = io.dcache_req.fire && dx_fencei
   val cleand_done_clr   = dx_valid && fencei_exec_done && wb_ready | dx_flush
   val cleand_done_n     = cleand_done_set | ~cleand_done_clr
   val cleand_done_en    = cleand_done_set | cleand_done_clr
   clean_dcache_done     := RegEnable(cleand_done_n, false.B, cleand_done_en)
 
+  val invalidate_dcache_done = Wire(Bool())
+  val dcache_invalidate_req = dx_valid && !invalidate_dcache_done && !dx_flush && dx_fence && !dxHasTrap && !dx_stall && memNotOutStanding
+  val invalidated_done_set = io.dcache_req.fire && dx_fence
+  val invalidated_dcache_clr = dx_valid && fence_exec_done && wb_ready | dx_flush
+  val invalidated_done_n = invalidated_done_set | ~invalidated_dcache_clr
+  val invalidated_done_en = invalidated_done_set | invalidated_dcache_clr
+  invalidate_dcache_done := RegEnable(invalidated_done_n, false.B, invalidated_done_en)
+
   fencei_exec_done      := flush_icache_done & clean_dcache_done
+  fence_exec_done := invalidate_dcache_done
   val fencei_flush_pluse = fencei_exec_done & dx_valid & !dx_flush & !dxHasTrap & !dx_stall
 
   io.icache_req.valid   := icahce_flush_req
   io.icache_req.bits.invalid := dx_fencei
   io.icache_req.bits.clean   := false.B
 
-  io.dcache_req.valid   := dcache_clean_req
-  io.dcache_req.bits.invalid := false.B
+  io.dcache_req.valid   := dcache_clean_req || dcache_invalidate_req
+  io.dcache_req.bits.invalid := dx_fence
   io.dcache_req.bits.clean   := dx_fencei
 
   io.mem.valid := dx_valid && !dx_exec_done && !dx_flush && is_mem && !dxHasTrap && !dx_stall && memNotOutStanding
@@ -301,13 +312,15 @@ class Cl1IDEXStage extends Module with TrapCode {
   io.mem.bits.wdata := io.rs2Value
 
   val fencei_exec    = dx_fencei && !dxHasTrap
+  val fence_exec = dx_fence && !dxHasTrap
   val multicycl_exec = ((is_mem | op_is_mdu) && !dxHasTrap)
-  val singlcycl_exec = ~multicycl_exec & ~fencei_exec
+  val singlcycl_exec = ~multicycl_exec & ~fencei_exec & ~fence_exec
 
   val ready_go = Mux1H(Seq(
     multicycl_exec -> (fu_hsked | dx_exec_done),
     singlcycl_exec -> true.B,
-    fencei_exec    -> fencei_exec_done
+    fencei_exec    -> fencei_exec_done,
+    fence_exec -> fence_exec_done
   )) & !dx_stall
   io.pplIn.ready := !dx_valid  || dx_flush || ready_go && io.pplOut.ready
 

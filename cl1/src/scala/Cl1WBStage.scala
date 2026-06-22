@@ -39,6 +39,7 @@ class Cl1WBStage extends Module with TrapCode {
     val csrWen     = Output(Bool())
     val csr_idx    = Output(UInt(12.W))
     val valid      = Output(Bool())
+    val commit     = Output(Bool())
     val cInst     = Output(UInt(16.W))
     val inst       = Output(UInt(32.W))
     val is_mem_load     = Output(Bool())
@@ -123,6 +124,7 @@ class Cl1WBStage extends Module with TrapCode {
   
   val ready_go  = if(WB_PIPESTAGE) wb_ready_go else dxwb_ready
   val wb_commit = wb_valid && ready_go && !io.flush
+  io.commit := wb_commit
 
   val wen = pplIn.wen
   io.wen := wb_commit && wen && !is_valid_mem_err

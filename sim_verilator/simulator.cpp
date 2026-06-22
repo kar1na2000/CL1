@@ -71,6 +71,7 @@ void Simulator::initialize_inputs() {
   top_->io_sft_irq = 0;
   top_->io_tmr_irq = 0;
   top_->io_dbg_req_i = 0;
+  top_->io_boot_addr = options_.boot_addr;
 #if defined(CL1_TEST_MODE_BUS)
   top_->io_ibus_req_ready = 0;
   top_->io_ibus_rsp_valid = 0;

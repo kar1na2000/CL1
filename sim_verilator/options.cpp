@@ -158,6 +158,8 @@ void print_usage(const char* argv0) {
       << "  --symbol-elf <path>              Parse tohost/fromhost symbols from a sidecar ELF\n"
       << "  --load-addr <addr>               Base load address for BIN/HEX images (default: "
       << hex32(kCl1DefaultLoadAddr) << ")\n"
+      << "  --boot-addr <addr>               Reset fetch address driven to io_boot_addr (default: "
+      << hex32(kCl1DefaultBootAddr) << ")\n"
       << "  --ram-base <addr>                Simulated RAM base (default: "
       << hex32(kCl1DefaultRamBase) << ")\n"
       << "  --ram-size <bytes>               Simulated RAM size, supports K/M/G suffixes (default: "
@@ -203,6 +205,8 @@ Options parse_args(int argc, char** argv) {
       options.symbol_elf_path = fs::path(need_value(arg));
     } else if (arg == "--load-addr") {
       options.load_addr = static_cast<uint32_t>(parse_u64_arg(need_value(arg)));
+    } else if (arg == "--boot-addr") {
+      options.boot_addr = static_cast<uint32_t>(parse_u64_arg(need_value(arg)));
     } else if (arg == "--ram-base") {
       options.ram_base = static_cast<uint32_t>(parse_u64_arg(need_value(arg)));
     } else if (arg == "--ram-size") {

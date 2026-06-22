@@ -78,6 +78,7 @@ object Cl2DecodeInfo {
     CSRField,
     MDField,
     IllegalField,
+    FenceField,
     FenceiField
   )
 
