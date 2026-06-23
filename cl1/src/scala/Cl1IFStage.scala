@@ -88,7 +88,7 @@ class Cl1IFStage extends Module {
   val ifu_new_req     = ~ifu_halt & ~ifu_stall & ~reset_flag_r
   val ifu_req_pending_n = ifu_req_valid & ~ifu_req_ready
   val ifu_req_pending = RegNext(ifu_req_pending_n, false.B)
-  val ifu_req         = ifu_new_req | ifu_req_pending | reset_req_r | bpu_redirect_req | flush_real
+  val ifu_req         = ifu_new_req | ifu_req_pending | reset_req_r | flush_real
 
   val redirect_req_hsked = Wire(Bool())
   val flush_pending     = Wire(Bool())
