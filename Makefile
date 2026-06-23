@@ -127,7 +127,7 @@ verilog-rvfi-axi:
 
 # RVFI with riscv-formal M-extension alternative ops, AXI exposed, minimal cache.
 verilog-rvfi-cache:
-	$(call gen_verilog,CL1_TEST_MODE=cache CL1_TOP_NAME=Cl1Top_RVFI_CACHE CL1_FORMAL_VERIF=true CL1_RISCV_FORMAL_ALTOPS=true CL1_HAS_ICACHE=true CL1_HAS_DCACHE=true CL1_SYN=false CL1_FORMAL_CACHE_IDXW=1,Cl1Top_RVFI_CACHE)
+	$(call gen_verilog,CL1_TEST_MODE=cache CL1_TOP_NAME=Cl1Top_RVFI_CACHE CL1_FORMAL_VERIF=true CL1_RISCV_FORMAL_ALTOPS=true CL1_HAS_ICACHE=true CL1_HAS_DCACHE=true CL1_SYN=false,Cl1Top_RVFI_CACHE)
 
 # Show Help for Elaborate
 help:
