@@ -25,7 +25,6 @@ trait TrapCode {
 class wb2Excp extends Bundle {
     val cmt_ecall     = Input(Bool())
     val cmt_mret      = Input(Bool())
-    val cmt_wfi       = Input(Bool())
     val wb_valid      = Input(Bool())
     val wb_pc         = Input(UInt(32.W))
     val excp_valid    = Input(Bool())
@@ -68,13 +67,7 @@ class Cl1EXCPIO() extends Bundle {
     val dx_valid            = Input(Bool())
     val ifu_stall           = Output(Bool())
     val dxu_stall           = Output(Bool())
-    val ifu_halt            = Output(Bool())
-    val ifu_halt_ack        = Input(Bool())
-    val dxu_halt            = Output(Bool())
-    val dxu_halt_ack        = Input(Bool())
-    val icache_idle         = Input(Bool())
-    val dcache_idle         = Input(Bool())
-    val core_wfi            = Output(Bool())
+    val wfi_wakeup_req      = Output(Bool())
     val excp2Csr            = new excp2Csr()
     val dbg2excp            = new dbg2excp()
     val wb2Excp             = new wb2Excp()
@@ -96,7 +89,6 @@ class Cl1EXCP() extends Module with TrapCode {
 
     val cmt_ecall       = io.wb2Excp.cmt_ecall
     val cmt_mret        = io.wb2Excp.cmt_mret
-    val cmt_wfi         = io.wb2Excp.cmt_wfi
     val ebrk_excp_en    = io.dbg2excp.ebrk_excp_en
     val wb_valid        = io.wb2Excp.wb_valid
     val wb_pc           = io.wb2Excp.wb_pc
@@ -198,7 +190,12 @@ class Cl1EXCP() extends Module with TrapCode {
     val stIsExcpFlush = isState(sExcpFlush)
     irq_csr_save_en := stIsIrqDrain & irq_drain_take
     val dxu_stall      = excp_req
-    val ifu_stall      = stIsIrqDrain
+    // Stall IF immediately when an interrupt is accepted from idle. This may be
+    // the first clock-enabled cycle after WFI, so allowing IF to advance here
+    // could let a younger instruction enter the pipeline before the interrupt
+    // drain starts. Keeping IF stopped preserves the exception PC saved for
+    // the interrupt that wakes WFI as the address after WFI, i.e. PC + 4.
+    val ifu_stall      = stIsIrqDrain | (stIsIdle & ~excp_req & irq_req)
 
     val direct_mode       = (mtvec(1,0) === 0.U)
     val vector_mode       = (mtvec(1,0) === 1.U)
@@ -216,28 +213,11 @@ class Cl1EXCP() extends Module with TrapCode {
     val flush              = trap_take_flush | trap_exit_flush
     val flush_pc           = Mux(trap_take_flush, trap_take_flush_pc, trap_exit_flush_pc)
     val flush_ofst         = trap_take_flush_ofst
-
-    // wfi
-    val wfi_cmt_vld        = cmt_wfi & !debug_mode
-    val wfi_halt_req_set   = wfi_cmt_vld
-    val wfi_halt_req_clr   = irq_req_raw | debug_take_req
-    val wfi_halt_req_en    = wfi_halt_req_set | wfi_halt_req_clr
-    val wfi_halt_req_n     = wfi_halt_req_set & ~wfi_halt_req_clr
-    val wfi_halt_req       = RegEnable(wfi_halt_req_n, false.B, wfi_halt_req_en)
-
-    val wfi_ifu_halt       = wfi_halt_req | wfi_halt_req_n
-    val wfi_dxu_halt       = wfi_ifu_halt
-    val wfi_ifu_halt_ack   = io.ifu_halt_ack
-    val wfi_dxu_halt_ack   = io.dxu_halt_ack
-    val cpu_halt_done      = wfi_ifu_halt & wfi_ifu_halt_ack & wfi_dxu_halt & wfi_dxu_halt_ack & io.icache_idle & io.dcache_idle
-
-    val core_wfi           = Wire(Bool())
-    val core_wfi_set       = cpu_halt_done & ~core_wfi
-    val core_wfi_clr       = wfi_halt_req_clr
-    val core_wfi_en        = core_wfi_set | core_wfi_clr
-    val core_wfi_n         = core_wfi_set & ~core_wfi_clr
-    core_wfi               := RegEnable(core_wfi_n, false.B, core_wfi_en)
-    val core_wfi_o         = core_wfi & ~core_wfi_clr
+     
+    // WFI can enter sleep only when there is no wakeup request. A pending
+    // interrupt is enough to wake WFI, and in debug mode WFI must behave as a
+    // NOP, so the power FSM must not enter sleep in either case.
+    val wfi_wakeup_req     = irq_req_raw | debug_mode | debug_take_req
 
     io.excp2Csr.cmt_epc_en := cmt_epc_en
     io.excp2Csr.cmt_epc_n  := cmt_epc_n
@@ -252,11 +232,8 @@ class Cl1EXCP() extends Module with TrapCode {
     io.flush_pc            := flush_pc
     io.flush_ofst          := flush_ofst
 
-    val dx_halt            = if(WB_PIPESTAGE) wfi_dxu_halt else false.B
-
     io.ifu_stall           := ifu_stall
     io.dxu_stall           := dxu_stall
-    io.ifu_halt            := wfi_ifu_halt
-    io.dxu_halt            := dx_halt
-    io.core_wfi            := core_wfi_o
+
+    io.wfi_wakeup_req      := wfi_wakeup_req
 }

@@ -45,6 +45,7 @@ class Cl1WBStage extends Module with TrapCode {
     val is_mem_load     = Output(Bool())
     val isEret    = Output(Bool())
     val wen_x1    = Output(Bool())
+    val wb_wfi    = Output(Bool())
     val spkDiffIo = if(difftest == true) Some(new spike_diff) else None
   })
 
@@ -62,7 +63,7 @@ class Cl1WBStage extends Module with TrapCode {
   val is_c_instr = pplIn.isCInst
   val rdata    = io.mem.bits.rdata
 
-  val wb_wfi      = false.B
+  val wb_wfi      = pplIn.privInstr(4)
   val wb_ecall    = pplIn.privInstr(3)
   val wb_ebreak   = pplIn.privInstr(2)
   val wb_mret     = pplIn.privInstr(1)
@@ -124,6 +125,7 @@ class Cl1WBStage extends Module with TrapCode {
   
   val ready_go  = if(WB_PIPESTAGE) wb_ready_go else dxwb_ready
   val wb_commit = wb_valid && ready_go && !io.flush
+  val wbTrap = (pplIn.isTrap || is_valid_mem_err) && wb_valid
   io.commit := wb_commit
 
   val wen = pplIn.wen
@@ -157,16 +159,17 @@ class Cl1WBStage extends Module with TrapCode {
 
   io.toExcp.cmt_ecall := isValidEcall
   io.toExcp.cmt_mret  := isValidEret
-  io.toExcp.cmt_wfi   := isValidWfi
   io.toExcp.wb_valid  := wb_valid
   io.toExcp.wb_pc     := wb_pc
-  io.toExcp.excp_valid := (io.pplIn.bits.isTrap && wb_valid) || (is_valid_mem_err && wb_valid)
+  io.toExcp.excp_valid := wbTrap
   io.toExcp.excp_code  := Mux(
     is_valid_mem_err,
     Mux(is_mem_store, STORE_ACCESS_EXPT(7,0), LOAD_ACCESS_EXPT(7,0)),
     io.pplIn.bits.trapCode
   )
   io.toExcp.excp_tval  := io.pplIn.bits.trapValue
+
+  io.wb_wfi := wb_valid && wb_wfi & ~wbTrap
 
 
 // difftest

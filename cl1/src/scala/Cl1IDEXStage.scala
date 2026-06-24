@@ -75,9 +75,9 @@ class Cl1IDEXStage extends Module with TrapCode {
     val csrRen   = Output(Bool())
 
     val stall    = Input(Bool())
-    val dxu_halt_ack = Output(Bool())
     val memNotOutStanding = Input(Bool())
     val valid    = Output(Bool())
+    val dx_wfi   = Output(Bool())
     val flush    = Input(Bool())
 
     val wen_x1   = Output(Bool())
@@ -427,7 +427,8 @@ class Cl1IDEXStage extends Module with TrapCode {
   io.pplOut.bits := pplInfo
   io.valid := dx_valid
 
-  io.dxu_halt_ack := true.B
+  val dec_wfi = privInstr(4)
+  io.dx_wfi := dx_valid && dec_wfi && !dxHasTrap && !dx_flush
 
   if(MDU_CKG_EN) {
     val mdu_ck_en = BoringUtils.bore(mdu.mdu_ck_en)
