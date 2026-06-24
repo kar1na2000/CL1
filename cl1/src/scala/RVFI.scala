@@ -33,6 +33,9 @@ class RVFI extends Bundle {
   val rvfi_mem_wmask = Output(UInt(4.W))
   val rvfi_mem_rdata = Output(UInt(32.W))
   val rvfi_mem_wdata = Output(UInt(32.W))
+  val rvfi_mem_fault = Output(Bool())
+  val rvfi_mem_fault_rmask = Output(UInt(4.W))
+  val rvfi_mem_fault_wmask = Output(UInt(4.W))
 
   val rvfi_csr_mstatus  = new RVFICSR
   val rvfi_csr_mie      = new RVFICSR

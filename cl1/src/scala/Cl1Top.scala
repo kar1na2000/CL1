@@ -114,12 +114,13 @@ if(FORMAL_VERIF && WB_PIPESTAGE) { withReset(rst1) {
   val wb_ecall  = BoringUtils.bore(core.wbStage.isValidEcall)
   val wb_cmt    = BoringUtils.bore(core.wbStage.wb_commit)
   val wb_diff_cmt = BoringUtils.bore(core.wbStage.diff_commit)
-  val trap      = BoringUtils.bore(core.excp.excp_req)
+  val trap_req  = BoringUtils.bore(core.excp.excp_req)
   val wb_excp_fault = BoringUtils.bore(core.wbStage.io.toExcp.excp_valid)
+  val wb_excp_code  = BoringUtils.bore(core.wbStage.io.toExcp.excp_code)
 
-  // Retire through RVFI when the instruction either commits normally, or
-  // takes an M-mode trap (ECALL, or EBREAK with dcsr.ebreakm==0).
-  val rvfi_valid = wb_diff_cmt || trap
+  // RVFI valid is a retire pulse. Exception requests are control-flow requests
+  // and can remain asserted while WB is stalled, so they must not create retires.
+  val rvfi_valid = wb_diff_cmt
   val valid_cnt = Wire(UInt(64.W))
   val wb_pc     = BoringUtils.bore(core.wbStage.wb_pc)
   val wb_is_c   = BoringUtils.bore(core.wbStage.pplIn.isCInst)
@@ -169,9 +170,15 @@ if(FORMAL_VERIF && WB_PIPESTAGE) { withReset(rst1) {
   val mem_wmask      = RegEnable(mem_wmask_n, 0.U, mem_req_hsked)
   val mem_wdata      = RegEnable(mem_wdata_n, 0.U, mem_req_hsked)
 
+  val inst_access_fault  = rvfi_valid && wb_excp_fault && (wb_excp_code === 1.U)
+  val load_access_fault  = rvfi_valid && wb_excp_fault && (wb_excp_code === 5.U)
+  val store_access_fault = rvfi_valid && wb_excp_fault && (wb_excp_code === 7.U)
+  val data_access_fault  = load_access_fault || store_access_fault
+  val mem_fault          = inst_access_fault || data_access_fault
+
   rvfi_port.rvfi_valid     := rvfi_valid
   rvfi_port.rvfi_order     := valid_cnt
-  rvfi_port.rvfi_insn      := Mux(wb_is_c, wb_cinst, wb_inst)
+  rvfi_port.rvfi_insn      := Mux(inst_access_fault, 0.U, Mux(wb_is_c, wb_cinst, wb_inst))
   rvfi_port.rvfi_trap      := wb_excp_fault
   rvfi_port.rvfi_halt      := false.B
 
@@ -180,13 +187,13 @@ if(FORMAL_VERIF && WB_PIPESTAGE) { withReset(rst1) {
   val excp_flush_ofst = BoringUtils.bore(core.excp.flush_ofst)
   val mret_taken      = BoringUtils.bore(core.excp.cmt_mret_en)
   val cur_excp_mtvec  = BoringUtils.bore(core.csr.mtvec)
-  val trap_target_pc  = Mux(trap, Cat(cur_excp_mtvec(31, 2), 0.U(2.W)), excp_flush_pc + excp_flush_ofst)
+  val trap_target_pc  = Mux(trap_req, Cat(cur_excp_mtvec(31, 2), 0.U(2.W)), excp_flush_pc + excp_flush_ofst)
 
   val dbg_flush  = BoringUtils.bore(core.dm.io.dbg_flush)
   chisel3.assume(!dbg_flush)
 
   val intr_pending = RegInit(false.B)
-  when (trap || intr_taken) {
+  when (trap_req || intr_taken) {
     intr_pending := true.B
   } .elsewhen (rvfi_valid) {
     intr_pending := false.B
@@ -203,14 +210,17 @@ if(FORMAL_VERIF && WB_PIPESTAGE) { withReset(rst1) {
   rvfi_port.rvfi_rd_addr   := Mux(wb_rd_wen, wb_rd_addr, 0.U)
   rvfi_port.rvfi_rd_wdata  := Mux(wb_rd_wen, wb_rd_wdata, 0.U)
   rvfi_port.rvfi_pc_rdata  := wb_pc
-  rvfi_port.rvfi_pc_wdata  := Mux(trap || mret_taken, trap_target_pc,
+  rvfi_port.rvfi_pc_wdata  := Mux(trap_req || mret_taken, trap_target_pc,
                                   Mux(dx_valid, dx_pc, f2_pc))
 
-  rvfi_port.rvfi_mem_addr  := Mux(mem_rsp_hsked, mem_addr, 0.U)
-  rvfi_port.rvfi_mem_rmask := Mux(mem_rsp_hsked, mem_rmask, 0.U)
-  rvfi_port.rvfi_mem_wmask := Mux(mem_rsp_hsked, mem_wmask, 0.U)
+  rvfi_port.rvfi_mem_addr  := Mux(mem_rsp_hsked || data_access_fault, mem_addr, 0.U)
+  rvfi_port.rvfi_mem_rmask := Mux(data_access_fault, 0.U, Mux(mem_rsp_hsked, mem_rmask, 0.U))
+  rvfi_port.rvfi_mem_wmask := Mux(data_access_fault, 0.U, Mux(mem_rsp_hsked, mem_wmask, 0.U))
   rvfi_port.rvfi_mem_rdata := Mux(mem_rsp_hsked, wb_mem_rdata, 0.U)
-  rvfi_port.rvfi_mem_wdata := Mux(mem_rsp_hsked, mem_wdata, 0.U)
+  rvfi_port.rvfi_mem_wdata := Mux(mem_rsp_hsked || store_access_fault, mem_wdata, 0.U)
+  rvfi_port.rvfi_mem_fault := mem_fault
+  rvfi_port.rvfi_mem_fault_rmask := Mux(load_access_fault, mem_rmask, 0.U)
+  rvfi_port.rvfi_mem_fault_wmask := Mux(store_access_fault, mem_wmask, 0.U)
 
   // ---- CSR channels ----
   val wb_csr_idx   = BoringUtils.bore(core.wbStage.io.csr_idx)
