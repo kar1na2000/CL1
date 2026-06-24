@@ -38,7 +38,7 @@ class Cl1Core extends Module {
 
   val gpr     = Module(new Cl1RegFile())
 
-  val lsu     = Module(new Cl1LSU())
+  val lsu     = Module(new CL1LSU())
 
   val wbStage = Module(new Cl1WBStage())
 
@@ -124,7 +124,7 @@ class Cl1Core extends Module {
 
   wbStage.io.dbg <> dm.io.wb2dbg
 
-  lsu.io.flush :=  false.B
+  lsu.io.in.flush :=  false.B
   lsu.io.in.req  <> idStage.io.mem
   lsu.io.in.resp <> wbStage.io.mem
 

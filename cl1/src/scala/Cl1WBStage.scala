@@ -98,7 +98,7 @@ class Cl1WBStage extends Module with TrapCode {
   val is_mem_load = ~pplIn.memType(3) & pplIn.memType(2,0).orR
   val is_mem_store = pplIn.memType(3) & pplIn.memType(2,0).orR
   io.mem.ready := wb_valid && is_mem
-  val is_valid_mem_err = wait_mem_resp && io.mem.fire && io.mem.bits.err.orR
+  val is_valid_mem_err = wait_mem_resp && io.mem.fire && io.mem.bits.err
 
 
   val not_mem = ~is_mem

@@ -44,7 +44,7 @@ There are also four important contract risks in the current workspace that must 
 - `mtval` is listed in the local `riscv-dv` target as implemented, but the RTL CSR block does not implement CSR `0x343`.
   Source: `../riscv-dv/pygen/pygen_src/target/rv32imc_mmode_trap/riscv_core_setting.py`, `cl1/src/scala/Cl1CSR.scala`
 - The LSU still contains `TODO:add misaligned memory access exception`.
-  Source: `cl1/src/scala/Cl1LSU.scala`
+  Source: `cl1/src/scala/CL1LSU.scala`
 - The decoder marks illegal instructions, but there is no visible illegal-instruction exception path connected into `Cl1EXCP`.
   Source: `cl1/src/scala/Cl1Decoder.scala`, `cl1/src/scala/Cl1EXCP.scala`
 
@@ -781,7 +781,7 @@ Use the mismatch shape to pick the first module to inspect.
 | --- | --- |
 | wrong `rd_wdata`, same PC | ALU/MDU/WB path |
 | wrong next PC after branch/jump | `Cl1IDEXStage`, `Cl1IFStage` |
-| wrong result after load/store | `Cl1LSU`, bus request/response, sign extension |
+| wrong result after load/store | `CL1LSU`, bus request/response, sign extension |
 | wrong trap PC/cause | `Cl1EXCP`, `Cl1CSR`, `Cl1DbgCtrl` |
 | wrong compressed-instruction behavior | `Cl1RVCExpander`, fetch alignment, PC increment |
 | timeout/deadlock after memory activity | LSU handshake, flush/stall interaction |
@@ -834,7 +834,7 @@ These are the first places to look for valid-test failures in the current worksp
 1. `Cl1CSR.scala`
    - missing or non-trapping absent CSR behavior
    - `misa` value consistency with the claimed `RV32IMC` contract
-2. `Cl1LSU.scala`
+2. `CL1LSU.scala`
    - sign extension and mask handling
    - lack of misaligned exception support
 3. `Cl1EXCP.scala`
