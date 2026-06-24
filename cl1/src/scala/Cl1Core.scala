@@ -46,6 +46,10 @@ class Cl1Core extends Module {
 
   val excp    = Module(new Cl1EXCP)
 
+  val powerCtrl = withClockAndReset(io.always_on_clock, reset) {
+    Module(new CL1PowerCtrl)
+  }
+
   dm.io.dbg_external_req_i := io.dbg_req_i
 
   val pipe_flush = excp.io.flush || dm.io.dbg_flush
@@ -60,11 +64,9 @@ class Cl1Core extends Module {
   ifStage.io.flush := pipe_flush
   ifStage.io.flush_pc := Mux(dm.io.dbg_flush, dm.io.dbg_flush_pc, excp.io.flush_pc)
   ifStage.io.flush_pc_ofst := Mux(dm.io.dbg_flush, 0.U, excp.io.flush_ofst)
-  ifStage.io.ifu_halt := excp.io.ifu_halt
-  ifStage.io.ifu_stall := excp.io.ifu_stall
+  ifStage.io.ifu_stall := excp.io.ifu_stall | powerCtrl.io.ifu_stall
   ifStage.io.boot_addr := io.boot_addr
   excp.io.next_pc := ifStage.io.next_pc
-  excp.io.ifu_halt_ack    := ifStage.io.ifu_halt_ack
 
   ifStage.io.toBpu <> bpu.io.fromIfu
   bpu.io.x1_val    := gpr.io.x1_val
@@ -87,7 +89,7 @@ class Cl1Core extends Module {
 
   val dx_rs1dat  = if(WB_PIPESTAGE)  Mux(rs1Hazard, bypass, gpr.io.readDataA) else gpr.io.readDataA
   val dx_rs2dat  = if(WB_PIPESTAGE)  Mux(rs2Hazard, bypass, gpr.io.readDataB) else gpr.io.readDataB
-  val dx_stall   = if(WB_PIPESTAGE)  csrHazard || (rs1Hazard || rs2Hazard) & wbStage.io.is_mem_load || excp.io.dxu_halt || excp.io.dxu_stall else false.B
+  val dx_stall   = if(WB_PIPESTAGE)  csrHazard || (rs1Hazard || rs2Hazard) & wbStage.io.is_mem_load || excp.io.dxu_stall else false.B
 
   idStage.io.pplOut <> wbStage.io.pplIn
   idStage.io.rs1Value := dx_rs1dat
@@ -98,7 +100,6 @@ class Cl1Core extends Module {
   idStage.io.flush    := pipe_flush
   idStage.io.memNotOutStanding := lsu.io.memNotOutStanding
   excp.io.dx_valid := idStage.io.valid
-  excp.io.dxu_halt_ack := idStage.io.dxu_halt_ack
 
   csr.io.rdAddr := readCSR
   csr.io.wrAddr := writeCSR
@@ -148,7 +149,11 @@ class Cl1Core extends Module {
   }
   excp.io.excp2Csr  <> csr.io.excp_intf
 
-  io.core_wfi     := excp.io.core_wfi
+  powerCtrl.io.dx_wfi := idStage.io.dx_wfi
+  powerCtrl.io.wb_wfi := wbStage.io.wb_wfi
+  powerCtrl.io.wfi_wakeup_req := excp.io.wfi_wakeup_req
+  powerCtrl.io.ifu_idle := ifStage.io.ifu_idle
+  io.core_wfi     := powerCtrl.io.core_sleep
 
 /*
   if(difftest) {
@@ -178,8 +183,8 @@ class Cl1Core extends Module {
     // Directly expose CoreBus interfaces, bypass cache/xbar/AXI
     io.ibus.get <> aligner.io.bus
     io.dbus.get <> lsu.io.out
-    excp.io.icache_idle := true.B
-    excp.io.dcache_idle := true.B
+    powerCtrl.io.icache_idle := true.B
+    powerCtrl.io.dcache_idle := true.B
     idStage.io.icache_req.ready := true.B
     idStage.io.dcache_req.ready := true.B
   } else {
@@ -188,13 +193,13 @@ class Cl1Core extends Module {
     if(HAS_ICACHE) {
       val icache = Module(new Cl1ICACHE)
       aligner.io.bus <> icache.io.in
-      excp.io.icache_idle := icache.io.icache_idle
+      powerCtrl.io.icache_idle := icache.io.icache_idle
       idStage.io.icache_req <> icache.io.dxReq
       xbar.io.in(0) <> icache.io.out
     } else {
       val ibridge = Module(new CoreBus2CacheBus)
       aligner.io.bus <> ibridge.io.in
-      excp.io.icache_idle := true.B
+      powerCtrl.io.icache_idle := true.B
       idStage.io.icache_req.ready := true.B
       xbar.io.in(0) <> ibridge.io.out
     }
@@ -202,7 +207,7 @@ class Cl1Core extends Module {
     if(HAS_DCACHE) {
       val dcache  = Module(new Cl1DCACHE)
       lsu.io.out     <> dcache.io.in
-      excp.io.dcache_idle := dcache.io.dcache_idle
+      powerCtrl.io.dcache_idle := dcache.io.dcache_idle
       idStage.io.dcache_req <> dcache.io.dxReq
       xbar.io.in(1) <> dcache.io.out
         if(DCACHE_CKG_EN) {
@@ -214,7 +219,7 @@ class Cl1Core extends Module {
       val dbridge = Module(new CoreBus2CacheBus)
       BypReg(lsu.io.out.req)     <> dbridge.io.in.req
       lsu.io.out.rsp     <> dbridge.io.in.rsp
-      excp.io.dcache_idle := true.B
+      powerCtrl.io.dcache_idle := true.B
       idStage.io.dcache_req.ready := true.B
       xbar.io.in(1) <> dbridge.io.out
     }

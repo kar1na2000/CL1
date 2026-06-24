@@ -33,9 +33,8 @@ class Cl1IFStage extends Module {
     val flush         = Input(Bool())
     val flush_pc      = Input(UInt(32.W))
     val flush_pc_ofst = Input(UInt(32.W))
-    val ifu_halt      = Input(Bool())
     val ifu_stall     = Input(Bool())
-    val ifu_halt_ack  = Output(Bool())
+    val ifu_idle      = Output(Bool())
     val next_pc       = Output(UInt(32.W))
     val boot_addr     = Input(UInt(32.W))
   })
@@ -47,7 +46,6 @@ class Cl1IFStage extends Module {
   val excp_flush_pc_ofst = io.flush_pc_ofst
 
   val flush_pluse     = io.fromdxu.flush_req || excp_flush
-  val ifu_halt        = io.ifu_halt
   val ifu_stall       = io.ifu_stall
   val flush_pc        = Mux(excp_flush, excp_flush_pc, io.fromdxu.flush_pc)
   val flush_pc_ofst   = Mux(excp_flush, excp_flush_pc_ofst, io.fromdxu.flush_pc_ofst)
@@ -85,10 +83,10 @@ class Cl1IFStage extends Module {
 
   val flush_real  = Wire(Bool())
   val ifu_req_valid   = Wire(Bool())
-  val ifu_new_req     = ~ifu_halt & ~ifu_stall & ~reset_flag_r
+  val ifu_new_req     = ~ifu_stall & ~reset_flag_r
   val ifu_req_pending_n = ifu_req_valid & ~ifu_req_ready
   val ifu_req_pending = RegNext(ifu_req_pending_n, false.B)
-  val ifu_req         = ifu_new_req | ifu_req_pending | reset_req_r | bpu_redirect_req | flush_real
+  val ifu_req         = ifu_new_req | ifu_req_pending | reset_req_r | flush_real
 
   val redirect_req_hsked = Wire(Bool())
   val flush_pending     = Wire(Bool())
@@ -137,7 +135,7 @@ class Cl1IFStage extends Module {
 
   val ir_o_rdy      = io.pplOut.ready
   val ifu_rsp_ready = Mux(kill_old_rsp, true.B, ir_o_rdy & ifu_req_ready & !ifu_stall)
-  val inst_valid     = ifu_rsp_valid & ifu_rsp_ready & ifu_req_ready & ~kill_old_rsp
+  val inst_valid     = ifu_rsp_valid & ifu_rsp_ready & ifu_req_ready & ~kill_old_rsp & ~ifu_stall
 
   val fetch_inst    = aligner.bits.inst
   is_c              := fetch_inst(1,0) =/= "b11".U
@@ -213,13 +211,9 @@ class Cl1IFStage extends Module {
   val next_pc       = Mux(ifu_out_r, pc_r, fetch_pc)
   io.next_pc        := next_pc
 
-  // wfi halt
-  val ifu_no_out   = ~ifu_out_r | ifu_rsp_valid
-  val ifu_halt_ack = Wire(Bool())
-  val ifu_halt_ack_set = ifu_halt & ~ifu_halt_ack & ifu_no_out
-  val ifu_halt_ack_clr = ifu_halt_ack & ~ifu_halt
-  val ifu_halt_ack_en  = ifu_halt_ack_set | ifu_halt_ack_clr
-  val ifu_halt_ack_n   = ifu_halt_ack_set | ~ifu_halt_ack_clr
-  ifu_halt_ack         := RegEnable(ifu_halt_ack_n, false.B, ifu_halt_ack_en)
-  io.ifu_halt_ack      := ifu_halt_ack
+  // IFU is sleep-ready when it will not issue a new fetch and any outstanding
+  // fetch has either returned or is already captured locally.
+  val ifu_no_req = !ifu_req_valid && !ifu_req_pending && !reset_req_r && !flush_pending
+  val ifu_no_unreturned_fetch = !ifu_out_r || ifu_rsp_valid
+  io.ifu_idle := ifu_no_req && ifu_no_unreturned_fetch
 }
