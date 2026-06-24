@@ -2,7 +2,7 @@ package cl1
 
 import chisel3._
 import chisel3.util._
-import cl1.Cl1Config.RISCV_FORMAL_ALTOPS
+import cl1.CL1Config.RISCV_FORMAL_ALTOPS
 
 class mdu_alu_req extends Bundle {
     val req  = Output(Bool())

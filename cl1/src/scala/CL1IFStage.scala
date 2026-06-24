@@ -23,7 +23,7 @@ class IF2BPUSignal extends Bundle {
     val prdt_pc_ofst  = Input(UInt(32.W))
 }
 
-class Cl1IFStage extends Module {
+class CL1IFStage extends Module {
   val io = IO(new Bundle {
     val toBpu         = new IF2BPUSignal()
     val pplOut        = Decoupled(new IF2IDEXSignal())
@@ -141,7 +141,7 @@ class Cl1IFStage extends Module {
   is_c              := fetch_inst(1,0) =/= "b11".U
   val c_inst        = fetch_inst(15,0)
 
-  val rvcexpander   = Module(new Cl1RVCExpander())
+  val rvcexpander   = Module(new CL1RVCExpander())
   rvcexpander.io.inst  := Mux(is_c, c_inst, 0.U)
   val expand_inst      = rvcexpander.io.out
   val rvc_illegal   = is_c && rvcexpander.io.illegal

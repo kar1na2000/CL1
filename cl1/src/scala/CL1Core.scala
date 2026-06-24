@@ -4,13 +4,13 @@ package cl1
 
 import chisel3._
 import chisel3.util._
-import cl1.Cl1Config._
-import cl1.Cl1PowerSaveConfig._
+import cl1.CL1Config._
+import cl1.CL1PowerSaveConfig._
 import utils._
 import chisel3.util.circt.ClockGate
 import chisel3.util.experimental.BoringUtils
 
-class Cl1Core extends Module {
+class CL1Core extends Module {
   val io = IO(new Bundle {
     val always_on_clock = Input(Clock())
     val dbg_req_i = Input(Bool())
@@ -26,25 +26,25 @@ class Cl1Core extends Module {
 
 
 //TODO: This wiring approach is not significantly different from Verilog
-  val ifStage = Module(new Cl1IFStage())
+  val ifStage = Module(new CL1IFStage())
 
-  val bpu     = Module(new Cl1BPU())
+  val bpu     = Module(new CL1BPU())
 
   val aligner = Module(new FetchAlign())
 
-  val idStage = Module(new Cl1IDEXStage())
+  val idStage = Module(new CL1IDEXStage())
 
-  val csr     = Module(new Cl1CSR())
+  val csr     = Module(new CL1CSR())
 
-  val gpr     = Module(new Cl1RegFile())
+  val gpr     = Module(new CL1RegFile())
 
   val lsu     = Module(new CL1LSU())
 
-  val wbStage = Module(new Cl1WBStage())
+  val wbStage = Module(new CL1WBStage())
 
-  val dm      = Module(new Cl1DM)
+  val dm      = Module(new CL1DM)
 
-  val excp    = Module(new Cl1EXCP)
+  val excp    = Module(new CL1EXCP)
 
   val powerCtrl = withClockAndReset(io.always_on_clock, reset) {
     Module(new CL1PowerCtrl)
@@ -138,7 +138,7 @@ class Cl1Core extends Module {
   wbStage.io.toExcp <> excp.io.wb2Excp
 
   excp.io.dbg2excp  <> dm.io.dbg2excp
-  if (cl1.Cl1Config.FORMAL_VERIF) {
+  if (cl1.CL1Config.FORMAL_VERIF) {
     // Under formal verification, force debug-mode-related signals into
     // architectural mode so traps go to mtvec (not the debug exception base).
     // BMC otherwise picks anyinit values for dm registers and explores
@@ -192,7 +192,7 @@ class Cl1Core extends Module {
     val xbar    = Module(new crossbarCache())
 
     if(HAS_ICACHE) {
-      val icache = Module(new Cl1ICACHE)
+      val icache = Module(new CL1ICACHE)
       aligner.io.bus <> icache.io.in
       powerCtrl.io.icache_idle := icache.io.icache_idle
       idStage.io.icache_req <> icache.io.dxReq
@@ -206,7 +206,7 @@ class Cl1Core extends Module {
     }
 
     if(HAS_DCACHE) {
-      val dcache  = Module(new Cl1DCACHE)
+      val dcache  = Module(new CL1DCACHE)
       lsu.io.out     <> dcache.io.in
       powerCtrl.io.dcache_idle := dcache.io.dcache_idle
       idStage.io.dcache_req <> dcache.io.dxReq

@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 import utils._
 import chisel3.util.HasBlackBoxInline
-import cl1.Cl1Config._
+import cl1.CL1Config._
 
 class dxReq  extends Bundle {
     val invalid = Output(Bool())
@@ -46,7 +46,7 @@ class CacheBus extends Bundle {
     }))
 }
 
-class Cl1ICACHE extends Module {
+class CL1ICACHE extends Module {
     val io = IO(new Bundle {
         val in      = Flipped(new CoreBus)
         val dxReq   = Flipped(Decoupled(new dxReq))

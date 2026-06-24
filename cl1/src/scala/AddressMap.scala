@@ -232,5 +232,5 @@ object PlatformAddressMaps {
   def apply(name: String): PlatformAddressMap =
     all.getOrElse(name, throw new IllegalArgumentException(s"unknown CL1 platform '$name'"))
 
-  def selected: PlatformAddressMap = apply(Cl1BuildMode.PLATFORM)
+  def selected: PlatformAddressMap = apply(CL1BuildMode.PLATFORM)
 }

@@ -9,7 +9,7 @@ class CSRCounterTest extends AnyFreeSpec with ChiselScalatestTester {
 
   private def u32(value: BigInt): UInt = (value & WordMask).U(32.W)
 
-  private def pokeDefaults(dut: Cl1CSR): Unit = {
+  private def pokeDefaults(dut: CL1CSR): Unit = {
     dut.io.rdAddr.poke(0.U)
     dut.io.wrAddr.poke(0.U)
     dut.io.wrValue.poke(0.U)
@@ -35,19 +35,19 @@ class CSRCounterTest extends AnyFreeSpec with ChiselScalatestTester {
     dut.io.excp_intf.cmt_mret_en.poke(false.B)
   }
 
-  private def resetDut(dut: Cl1CSR): Unit = {
+  private def resetDut(dut: CL1CSR): Unit = {
     pokeDefaults(dut)
     dut.reset.poke(true.B)
     dut.clock.step()
     dut.reset.poke(false.B)
   }
 
-  private def expectCSR(dut: Cl1CSR, addr: UInt, value: BigInt): Unit = {
+  private def expectCSR(dut: CL1CSR, addr: UInt, value: BigInt): Unit = {
     dut.io.rdAddr.poke(addr)
     dut.io.rdValue.expect(u32(value))
   }
 
-  private def writeCSR(dut: Cl1CSR, addr: UInt, value: BigInt, commit: Boolean = false): Unit = {
+  private def writeCSR(dut: CL1CSR, addr: UInt, value: BigInt, commit: Boolean = false): Unit = {
     dut.io.wrAddr.poke(addr)
     dut.io.wrValue.poke(u32(value))
     dut.io.wen.poke(true.B)
@@ -60,7 +60,7 @@ class CSRCounterTest extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "mcycle and mcycleh increment and carry across CSR writes" in {
-    test(new Cl1CSR()) { dut =>
+    test(new CL1CSR()) { dut =>
       resetDut(dut)
 
       expectCSR(dut, CSRs.mcycle, 0)
@@ -90,7 +90,7 @@ class CSRCounterTest extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "minstret and minstreth increment only on commit and carry cleanly" in {
-    test(new Cl1CSR()) { dut =>
+    test(new CL1CSR()) { dut =>
       resetDut(dut)
 
       expectCSR(dut, CSRs.minstret, 0)

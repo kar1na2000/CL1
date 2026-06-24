@@ -4,9 +4,9 @@ package cl1
 
 import chisel3._
 import chisel3.util._
-import cl1.Cl1Config._
-import Cl1PowerSaveConfig._
-import Cl1PowerSaveConfig._
+import cl1.CL1Config._
+import CL1PowerSaveConfig._
+import CL1PowerSaveConfig._
 import chisel3.util.circt.ClockGate
 import chisel3.util.experimental.BoringUtils
 
@@ -55,7 +55,7 @@ class DX2IFUSignal extends Bundle {
 }
 
 
-class Cl1IDEXStage extends Module with TrapCode {
+class CL1IDEXStage extends Module with TrapCode {
   val io = IO(new Bundle {
     val pplIn  = Flipped(Decoupled(new IF2IDEXSignal()))
     val pplOut = Decoupled(new IDEX2WBSignal())
@@ -114,7 +114,7 @@ class Cl1IDEXStage extends Module with TrapCode {
 
   val decoder = Module(new Cl2Decoder())
   val mdu     = Module(new CL1MDULp())
-  val alu     = Module(new Cl1ALU)
+  val alu     = Module(new CL1ALU)
 
   /* This 'valid' register means the input of this stage is valid, which
    is NOT the handshake signal. */
@@ -189,7 +189,7 @@ class Cl1IDEXStage extends Module with TrapCode {
   alu.io.misc_req.a := a
   alu.io.misc_req.b := b
   alu.io.misc_req.op := ctrl.aluOp
-  if(Cl1Config.MDU_SHAERALU == true) {
+  if(CL1Config.MDU_SHAERALU == true) {
     alu.io.mdu_req <> mdu.io.alu_req
   } else {
     alu.io.mdu_req.op1 := 0.U

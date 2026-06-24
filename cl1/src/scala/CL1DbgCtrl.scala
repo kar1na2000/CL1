@@ -2,7 +2,7 @@ package cl1
 
 import chisel3._
 import chisel3.util._
-import cl1.Cl1Config.DBG_ENTRYADDR
+import cl1.CL1Config.DBG_ENTRYADDR
 
 object DbgCause {
     val None            = 0.U(3.W)
@@ -33,7 +33,7 @@ class wb2DbgSignal extends Bundle {
     // val dbg_irq_mask   = Output(Bool())
 }
 
-class Cl1DM extends Module {
+class CL1DM extends Module {
     val io = IO(new Bundle {
         val dbg2csr                     = new Dbg2CsrSignal()
         val wb2dbg                      = new wb2DbgSignal()

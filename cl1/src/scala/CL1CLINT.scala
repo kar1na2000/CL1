@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 
 
-class Cl1CLINT extends Module {
+class CL1CLINT extends Module {
     
     val io = IO(new Bundle {
         val req = Flipped(Decoupled(Input(new SimpleMemReq(32))))

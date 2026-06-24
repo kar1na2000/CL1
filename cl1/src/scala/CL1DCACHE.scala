@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 import utils._
 import chisel3.util.HasBlackBoxInline
-import cl1.Cl1Config._
+import cl1.CL1Config._
 
 class rf_ram(val WordDepth:Int = 256, val DW:Int = 1) extends Module {
     val io   = IO(new Bundle {
@@ -29,7 +29,7 @@ class rf_ram(val WordDepth:Int = 256, val DW:Int = 1) extends Module {
     io.dout := ram(io.raddr)
 }
 
-class Cl1DCACHE extends Module {
+class CL1DCACHE extends Module {
     val io = IO(new Bundle {
         val in      = Flipped(new CoreBus)
         val dxReq   = Flipped(Decoupled(new dxReq))

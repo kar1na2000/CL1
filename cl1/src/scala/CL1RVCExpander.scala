@@ -175,7 +175,7 @@ class RVCDecoder(x: UInt, xLen: Int, fLen: Int, useAddiForMv: Boolean = false) {
   }
 }
 
-class Cl1RVCExpander(xLen: Int = 32, fLen: Int = 0, useAddiForMv: Boolean = false) extends Module {
+class CL1RVCExpander(xLen: Int = 32, fLen: Int = 0, useAddiForMv: Boolean = false) extends Module {
   val io = IO(new Bundle {
     val inst   = Input(UInt(16.W))
     val out     = Output(UInt(32.W))

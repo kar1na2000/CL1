@@ -23,9 +23,9 @@ object Elaborate extends App {
     "--ckg-enable=E",
     "--ckg-output=Q"
   )
-  private val moduleName = topName("Cl1Top")
+  private val moduleName = topName("CL1Top")
   circt.stage.ChiselStage.emitSystemVerilogFile(
-    new cl1.Cl1Top {
+    new cl1.CL1Top {
       override def desiredName: String = moduleName
     },
     args,

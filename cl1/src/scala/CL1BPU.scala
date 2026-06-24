@@ -11,7 +11,7 @@ class BPUIO extends Bundle {
 }
 
 
-class Cl1BPU extends Module {
+class CL1BPU extends Module {
   val io = IO(new BPUIO)
   
   // branch decode 

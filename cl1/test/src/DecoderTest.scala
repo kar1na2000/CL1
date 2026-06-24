@@ -44,7 +44,7 @@ class DecoderTest extends AnyFreeSpec with ChiselScalatestTester {
 
 class IDEXIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester {
   "illegal instruction enters the WB exception path without side effects" in {
-    test(new Cl1IDEXStage()) { dut =>
+    test(new CL1IDEXStage()) { dut =>
       dut.io.pplIn.valid.poke(true.B)
       dut.io.pplIn.bits.pc.poke("h80000020".U)
       dut.io.pplIn.bits.inst.poke("hffffffff".U)
@@ -100,7 +100,7 @@ class IDEXIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester 
 
 class IDEXFetchExceptionTest extends AnyFreeSpec with ChiselScalatestTester {
   "fetch error enters the WB instruction access fault path without side effects" in {
-    test(new Cl1IDEXStage()) { dut =>
+    test(new CL1IDEXStage()) { dut =>
       dut.io.pplIn.valid.poke(true.B)
       dut.io.pplIn.bits.pc.poke("h80000024".U)
       dut.io.pplIn.bits.inst.poke("h00102083".U)
@@ -135,7 +135,7 @@ class IDEXFetchExceptionTest extends AnyFreeSpec with ChiselScalatestTester {
 
 class EXCPIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester {
   "illegal instruction trap reuses the normal exception redirect and CSR update path" in {
-    test(new Cl1EXCP()) { dut =>
+    test(new CL1EXCP()) { dut =>
       dut.io.next_pc.poke(0.U)
       dut.io.dx_valid.poke(false.B)
       dut.io.ifu_halt_ack.poke(true.B)

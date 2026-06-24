@@ -7,7 +7,7 @@ import chisel3.util._
 
 import Control._
 import cl1.wb2DbgSignal
-import cl1.Cl1Config._
+import cl1.CL1Config._
 
 class spike_diff extends Bundle {
   val commit = Output(Bool())
@@ -17,7 +17,7 @@ class spike_diff extends Bundle {
   val isCInst = Output(Bool())
 }
 
-class Cl1WBStage extends Module with TrapCode {
+class CL1WBStage extends Module with TrapCode {
 
   val io = IO(new Bundle {
     val pplIn = Flipped(Decoupled(new IDEX2WBSignal()))

@@ -5,7 +5,7 @@ package cl1
 import chisel3._
 import chisel3.util._
 import chisel3.util.circt.ClockGate
-import cl1.Cl1Config._
+import cl1.CL1Config._
 import chisel3.util.experimental.BoringUtils
 
 class diff extends Bundle {
@@ -17,7 +17,7 @@ class diff extends Bundle {
   val rd_wdata = Output(UInt(32.W))
 }
 
-class Cl1Top extends Module{
+class CL1Top extends Module{
   val io = IO(new Bundle {
     val ext_irq   = Input(Bool())
     val sft_irq   = Input(Bool())
@@ -40,12 +40,12 @@ class Cl1Top extends Module{
     val core_clk_en = ~core_wfi
     val gatedClock  = ClockGate(clock, core_clk_en).suggestName(s"clk_gate")
     val core_u      = withClockAndReset(gatedClock, rst1) {
-      Module(new Cl1Core)
+      Module(new CL1Core)
     }
     core_wfi       := core_u.io.core_wfi
     core_u
   } else {
-      withReset(rst1) {Module(new Cl1Core)}
+      withReset(rst1) {Module(new CL1Core)}
   }
   
 

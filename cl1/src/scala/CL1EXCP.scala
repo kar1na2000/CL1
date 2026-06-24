@@ -1,7 +1,7 @@
 package cl1
 import chisel3._
 import chisel3.util._
-import Cl1Config._
+import CL1Config._
 
 trait TrapCode {
 
@@ -59,7 +59,7 @@ class dbg2excp extends Bundle {
 }
 
 
-class Cl1EXCPIO() extends Bundle {
+class CL1EXCPIO() extends Bundle {
     val flush               = Output(Bool())
     val flush_pc            = Output(UInt(32.W))
     val flush_ofst          = Output(UInt(32.W))
@@ -73,8 +73,8 @@ class Cl1EXCPIO() extends Bundle {
     val wb2Excp             = new wb2Excp()
 }
 
-class Cl1EXCP() extends Module with TrapCode {
-    val io = IO(new Cl1EXCPIO())
+class CL1EXCP() extends Module with TrapCode {
+    val io = IO(new CL1EXCPIO())
 
     val meie    = io.excp2Csr.meie
     val msie    = io.excp2Csr.msie
@@ -201,7 +201,7 @@ class Cl1EXCP() extends Module with TrapCode {
     val vector_mode       = (mtvec(1,0) === 1.U)
     val mtvec_base        = Cat(mtvec(31,2),0.U(2.W))
 
-    val debug_excp_base         = Cl1Config.DBG_EXCP_BASE.U
+    val debug_excp_base         = CL1Config.DBG_EXCP_BASE.U
     val trap_take_flush         = stIsIrqFlush | stIsExcpFlush
     val trap_take_flush_pc      = Mux(debug_mode, debug_excp_base, mtvec_base)
     val is_interrupt            = stIsIrqFlush

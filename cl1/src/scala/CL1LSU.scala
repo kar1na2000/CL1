@@ -6,7 +6,7 @@ import chisel3._
 import chisel3.util._
 
 import Control._
-import cl1.Cl1Config._
+import cl1.CL1Config._
 import cl1.SimpleMask._
 
 class LSU2WBSignal extends Bundle {

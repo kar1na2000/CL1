@@ -2,8 +2,8 @@ package utils
 
 import chisel3._
 import chisel3.util._
-import cl1.Cl1Config.{SramFoundary, Technology}
-import cl1.Cl1Technology
+import cl1.CL1Config.{SramFoundary, Technology}
+import cl1.CL1Technology
 
 class sramIO(val WordDepth:Int = 256, val DW: Int = 32, val BE: Boolean = false) extends Bundle {
     val addr = Input(UInt(log2Ceil(WordDepth).W))
@@ -18,8 +18,8 @@ class sram(val WordDepth:Int = 256, val DW: Int = 32, val BE: Boolean = false) e
 
     private val addrWidth = log2Ceil(WordDepth)
     private val useFoundryMacro = SramFoundary
-    private val useCx55Macro = Cl1Technology.useCx55Memory(Technology)
-    private val useSmic100Macro = Cl1Technology.useSmic100Memory(Technology)
+    private val useCx55Macro = CL1Technology.useCx55Memory(Technology)
+    private val useSmic100Macro = CL1Technology.useSmic100Memory(Technology)
 
     private def requireCx55Shape(): Unit = {
         require(WordDepth == 128, s"CX55 SRAM M8 macro only supports WordDepth=128, got ${WordDepth}.")

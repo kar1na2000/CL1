@@ -16,7 +16,7 @@ class alu_io extends Bundle {
   val mdu_req = Flipped(new mdu_alu_req())
 }
 
-class Cl1ALU extends Module {
+class CL1ALU extends Module {
   val io = IO(new alu_io())
 
   val aluops_oh   = io.misc_req.op

@@ -4,9 +4,9 @@ package cl1
 
 import chisel3._
 import chisel3.util._
-import cl1.Cl1PowerSaveConfig._
+import cl1.CL1PowerSaveConfig._
 
-class Cl1RegFile extends Module {
+class CL1RegFile extends Module {
   val io = IO(new Bundle {
     val readAddrA = Input(UInt(5.W))
     val readAddrB = Input(UInt(5.W))

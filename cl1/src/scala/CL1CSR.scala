@@ -2,7 +2,7 @@ package cl1
 
 import chisel3._
 import chisel3.util._
-import Cl1Config.TVEC_ADDR
+import CL1Config.TVEC_ADDR
 
 object CSRs {
   val misa    = 0x301.U(12.W)
@@ -89,7 +89,7 @@ class CSRIO() extends Bundle {
 
 // TODO: Treating CSR as GPR here is incorrect and needs to be fixed.
 // TODO: Implement U mode and M mode
-class Cl1CSR() extends Module {
+class CL1CSR() extends Module {
   val io = IO(new CSRIO())
 
   val csr_waddr = io.wrAddr
