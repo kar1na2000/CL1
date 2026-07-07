@@ -1,0 +1,41 @@
+name: Tapeout v2 CI Example
+
+on:
+  push:
+    branches:
+      - "tapeout/v2.0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tapeout-v2-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Self-hosted smoke
+    runs-on:
+      - self-hosted
+    if: github.ref_name == 'tapeout/v2.0'
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show runner context
+        run: |
+          echo "branch=${GITHUB_REF_NAME}"
+          echo "sha=${GITHUB_SHA}"
+          echo "runner=${RUNNER_NAME}"
+          echo "workspace=${GITHUB_WORKSPACE}"
+
+      - name: Verify repository files
+        run: |
+          test -f flake.nix
+
+      - name: Run chassis regression
+        run: |
+          run_chassis_regression.sh
