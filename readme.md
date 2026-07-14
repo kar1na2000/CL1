@@ -126,6 +126,12 @@ CL1_PLATFORM=full_soc ./sim_verilator/build.sh
 - Chisel 6.6.0
 - firtool 1.105.0 (会自动下载)
 
+生成 Verilog 或项目文档前，首先进入仓库提供的 Nix 开发环境：
+
+```bash
+nix develop
+```
+
 ### 生成 Verilog
 
 ```bash
@@ -133,3 +139,21 @@ make verilog
 ```
 
 生成的 Verilog 文件位于 `vsrc/<mode>/Cl1Top.sv`，其中 `<mode>` 为 `bus` 或 `cache`。
+
+## 生成项目文档
+
+生成 HTML 文档：
+
+```bash
+make -C doc html
+```
+
+生成结果位于 `doc/_build/html`。
+
+生成 PDF 文档：
+
+```bash
+make -C doc latexpdf
+```
+
+生成结果位于 `doc/_build/latex/cl1-core-documentation.pdf`。

@@ -21,6 +21,15 @@
         version = "local-1.0";
       });
 
+      docPython = pkgs.python3.withPackages (ps: [
+        ps.sphinx
+        ps.sphinx-rtd-theme
+      ]);
+
+      docTex = pkgs.texlive.combine {
+        inherit (pkgs.texlive) scheme-medium collection-latexextra;
+      };
+
       # 2. Cross-compilation package set for the TARGET (RISC-V)
       pkgsRiscv = import nixpkgs {
         inherit system;
@@ -59,6 +68,9 @@
             openocd-riscv
             pkgs.python3Packages.kconfiglib
             pkgs.scons
+            docPython
+            docTex
+            pkgs.poppler_utils
 
             # === TARGET Toolchain (builds code for RISC-V) ===
             # Use the toolchain you defined in pkgsRiscv
