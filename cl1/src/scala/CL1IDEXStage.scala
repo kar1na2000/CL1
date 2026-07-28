@@ -113,8 +113,11 @@ class CL1IDEXStage extends Module with TrapCode {
   }
 
   val decoder = Module(new Cl2Decoder())
-  val mdu     = Module(new CL1MDULp())
-  val alu     = Module(new CL1ALU)
+  val mdu: CL1MDUBase = CL1Config.MDU_IMPL match {
+    case "iterative" => Module(new CL1MDULp())
+    case "fast_mul"  => Module(new CL1FastMDU())
+  }
+  val alu = Module(new CL1ALU)
 
   /* This 'valid' register means the input of this stage is valid, which
    is NOT the handshake signal. */

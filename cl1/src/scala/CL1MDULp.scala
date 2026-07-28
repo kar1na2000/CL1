@@ -25,8 +25,15 @@ class MDUIOLp extends Bundle {
     val out = Decoupled(Output(UInt(32.W)))
 }
 
-class CL1MDULp extends Module {
+abstract class CL1MDUBase extends Module {
     val io = IO(new MDUIOLp)
+
+    // Kept on the common base so either MDU implementation can use the
+    // existing optional clock-gating connection in CL1IDEXStage.
+    val mdu_ck_en = Wire(Bool())
+}
+
+class CL1MDULp extends CL1MDUBase {
 
     val mdu_rs1     = io.in.bits.rs1
     val mdu_rs2     = io.in.bits.rs2
@@ -349,7 +356,7 @@ val mdu_oen =   special_case ||
 mdu_rsp_vld := mdu_oen 
 mdu_req_rdy := mdu_oen & mdu_rsp_rdy 
 
-val mdu_ck_en = mdu_st_idle & mdu_valid | ~mdu_st_idle
+mdu_ck_en := mdu_st_idle & mdu_valid | ~mdu_st_idle
 
 // for debug
 dontTouch(remd)

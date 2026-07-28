@@ -18,7 +18,7 @@ object MDUOpType {
 }
 
 class MDUBundle(len: Int = 32) extends Bundle {
-  val in   = Flipped(DecoupledIO(Vec(2, Output(UInt((len + 1).W)))))
+  val in   = Flipped(DecoupledIO(Vec(2, Output(UInt((len).W)))))
   val out  = DecoupledIO(Output(UInt((len * 2).W)))
   val sign = Input(Bool())
 }

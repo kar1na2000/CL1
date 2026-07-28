@@ -101,6 +101,11 @@ object CL1ProcessorConfig {
   val DBG_ENTRYADDR = "h800"
   val DBG_EXCP_BASE = "h800"
   val MDU_SHAERALU = false
+  val MDU_IMPL = CL1BuildMode.string("CL1_MDU_IMPL", "iterative").toLowerCase.replace("-", "_")
+  require(
+    MDU_IMPL == "iterative" || MDU_IMPL == "fast_mul",
+    s"CL1_MDU_IMPL must be iterative or fast_mul, got '$MDU_IMPL'"
+  )
   val WB_PIPESTAGE = true
   val HAS_ICACHE   = CL1BuildMode.bool("CL1_HAS_ICACHE", CL1BuildMode.CACHE_MODE)
   val HAS_DCACHE   = CL1BuildMode.bool("CL1_HAS_DCACHE", CL1BuildMode.CACHE_MODE)
@@ -147,6 +152,7 @@ object CL1Config {
   val DBG_ENTRYADDR = CL1ProcessorConfig.DBG_ENTRYADDR
   val DBG_EXCP_BASE = CL1ProcessorConfig.DBG_EXCP_BASE
   val MDU_SHAERALU = CL1ProcessorConfig.MDU_SHAERALU
+  val MDU_IMPL = CL1ProcessorConfig.MDU_IMPL
   val WB_PIPESTAGE = CL1ProcessorConfig.WB_PIPESTAGE
   val HAS_ICACHE = CL1ProcessorConfig.HAS_ICACHE
   val HAS_DCACHE = CL1ProcessorConfig.HAS_DCACHE
