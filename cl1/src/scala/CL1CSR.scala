@@ -5,62 +5,55 @@ import chisel3.util._
 import CL1Config.TVEC_ADDR
 
 object CSRs {
-  val misa    = 0x301.U(12.W)
-  val mstatus = 0x300.U(12.W)
-  val mtvec = 0x305.U(12.W)
-  val mstatush = 0x310.U(12.W)
-  val mscratch = 0x340.U(12.W)
-  val mepc = 0x341.U(12.W)
-  val mcause = 0x342.U(12.W)
-  val mtval = 0x343.U(12.W)
-  val dcsr   = 0x7b0.U(12.W)
-  val dpc    = 0x7b1.U(12.W)
-  val dscratch0 = 0x7b2.U(12.W)
-  val dscratch1 = 0x7b3.U(12.W)
-  val mip    = 0x344.U(12.W)
-  val mie    = 0x304.U(12.W)
-  val mcycle = 0xb00.U(12.W)
-  val minstret = 0xb02.U(12.W)
-  val mcycleh = 0xb80.U(12.W)
-  val minstreth = 0xb82.U(12.W)
-  val mvendorid = 0xf11.U(12.W)
-  val marchid = 0xf12.U(12.W)
-  val mimpid = 0xf13.U(12.W)
-  val mhartid = 0xf14.U(12.W)
-  val mconfigptr = 0xf15.U(12.W)
+  private final class CSRCategory(enabled: Boolean) {
+    private val members = scala.collection.mutable.ArrayBuffer.empty[UInt]
 
-  val machineReadable = Seq(
-    misa,
-    mstatus,
-    mstatush,
-    mtvec,
-    mscratch,
-    mepc,
-    mcause,
-    mtval,
-    mip,
-    mie,
-    mcycle,
-    minstret,
-    mcycleh,
-    minstreth,
-    mvendorid,
-    marchid,
-    mimpid,
-    mhartid,
-    mconfigptr
-  )
+    def apply(address: Int): UInt = {
+      val addr = address.U(12.W)
+      if (enabled) members += addr
+      addr
+    }
 
-  val readOnly = Seq(
-    mvendorid,
-    marchid,
-    mimpid,
-    mhartid,
-    mconfigptr
-  )
+    def addresses: Seq[UInt] = members.toSeq
+  }
 
-  def isMachineReadable(addr: UInt): Bool = VecInit(machineReadable.map(addr === _)).asUInt.orR
-  def isReadOnly(addr: UInt): Bool = VecInit(readOnly.map(addr === _)).asUInt.orR
+  private val baseCSR  = new CSRCategory(enabled = true)
+  private val debugCSR = new CSRCategory(enabled = true)
+  private val CSRCategories = Seq(baseCSR)
+
+  val misa       = baseCSR(0x301)
+  val mstatus    = baseCSR(0x300)
+  val mtvec      = baseCSR(0x305)
+  val mstatush   = baseCSR(0x310)
+  val mscratch   = baseCSR(0x340)
+  val mepc       = baseCSR(0x341)
+  val mcause     = baseCSR(0x342)
+  val mtval      = baseCSR(0x343)
+  val mip        = baseCSR(0x344)
+  val mie        = baseCSR(0x304)
+  val mcycle     = baseCSR(0xb00)
+  val minstret   = baseCSR(0xb02)
+  val mcycleh    = baseCSR(0xb80)
+  val minstreth  = baseCSR(0xb82)
+  val mvendorid  = baseCSR(0xf11)
+  val marchid    = baseCSR(0xf12)
+  val mimpid     = baseCSR(0xf13)
+  val mhartid    = baseCSR(0xf14)
+  val mconfigptr = baseCSR(0xf15)
+
+  val dcsr       = debugCSR(0x7b0)
+  val dpc        = debugCSR(0x7b1)
+  val dscratch0  = debugCSR(0x7b2)
+  val dscratch1  = debugCSR(0x7b3)
+
+  def isSupportedCSR(addr: UInt): Bool = {
+    val supportedCSRs = CSRCategories.flatMap(_.addresses)
+    VecInit(supportedCSRs.map(addr === _)).asUInt.orR
+  }
+  def isIllegalCSRPriv(addr: UInt, privLvl: UInt): Bool = addr(9, 8) > privLvl
+  def isIllegalCSRWrite(addr: UInt, csrWr: Bool): Bool = addr(11, 10).andR && csrWr
+  def isIllegalCSR(addr: UInt, privLvl: UInt, csrWr: Bool): Bool =
+    !isSupportedCSR(addr) || isIllegalCSRPriv(addr, privLvl) || isIllegalCSRWrite(addr, csrWr)
 }
 
 object PrivMode {
@@ -74,6 +67,7 @@ class CSRIO() extends Bundle {
 
   val rdAddr = Input(UInt(12.W))
   val rdValue = Output(UInt(32.W))
+  val privLvl = Output(UInt(2.W))
   val wrAddr = Input(UInt(12.W))
   val wrValue = Input(UInt(32.W))
   val wen    = Input(Bool())
@@ -93,7 +87,6 @@ class CSRIO() extends Bundle {
 
 
 // TODO: Treating CSR as GPR here is incorrect and needs to be fixed.
-// TODO: Implement U mode and M mode
 class CL1CSR() extends Module {
   val io = IO(new CSRIO())
 
@@ -244,6 +237,7 @@ class CL1CSR() extends Module {
                        cmt_mret_en   -> mstatus_mpp
   ))
   val priv_lvl       = RegEnable(priv_lvl_n, MMode, priv_lvl_en)
+  io.privLvl         := Fill(2, priv_lvl)
 
   val mstatus_mpp_en = csr_wen_mstatus || cmt_status_en || cmt_mret_en
   val mstatus_mpp_n  = MuxCase(UMode, Seq(

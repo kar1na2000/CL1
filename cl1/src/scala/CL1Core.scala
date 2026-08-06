@@ -96,6 +96,7 @@ class CL1Core extends Module {
   idStage.io.rs2Value := dx_rs2dat
 
   idStage.io.csrData  := csr.io.rdValue
+  idStage.io.privLvl  := csr.io.privLvl
   idStage.io.stall    := dx_stall
   idStage.io.flush    := pipe_flush
   idStage.io.memNotOutStanding := lsu.io.memNotOutStanding

@@ -73,6 +73,7 @@ class CL1IDEXStage extends Module with TrapCode {
     val csrData  = Input(UInt(32.W))
     val csrAddr  = Output(UInt(12.W))
     val csrRen   = Output(Bool())
+    val privLvl  = Input(UInt(2.W))
 
     val stall    = Input(Bool())
     val memNotOutStanding = Input(Bool())
@@ -150,7 +151,7 @@ class CL1IDEXStage extends Module with TrapCode {
   val isCSRRS = csrType(CSRRS_BIT) && !isPRIV
   val isCSRI  = csrType(CSRI_BIT)  && !isPRIV
   val csrWrites = isCSRRW || ((isCSRRC || isCSRRS) && rs1.orR)
-  val isIllegalCSR = isCSR && (!CSRs.isMachineReadable(csr_idx) || (csrWrites && CSRs.isReadOnly(csr_idx)))
+  val isIllegalCSR = isCSR && CSRs.isIllegalCSR(csr_idx, io.privLvl, csrWrites)
   val isFetchErr = io.pplIn.bits.ifu_fetch_err
   val isIllegalInst = ctrl.illegal || io.pplIn.bits.rvcIllegal || (isPRIV && !privInstr.orR) || isIllegalCSR
   val aSel    = ctrl.aSel
