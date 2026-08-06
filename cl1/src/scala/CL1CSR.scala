@@ -63,6 +63,11 @@ object CSRs {
   def isReadOnly(addr: UInt): Bool = VecInit(readOnly.map(addr === _)).asUInt.orR
 }
 
+object PrivMode {
+  val UMode = false.B
+  val MMode = true.B
+}
+
 
 class CSRIO() extends Bundle {
   val always_on_clock = Input(Clock())
@@ -197,7 +202,7 @@ class CL1CSR() extends Module {
     val wpri0     = UInt(1.W)
   }
 
-  val csrw_mstatus = Wire(Bool())
+  val csr_wen_mstatus = Wire(Bool())
   val mstatus_wdat = csr_wdat.asTypeOf(new mstatusBundle)
   val sd          = WireInit(false.B)
   val wpri25      = WireInit(0.U(6.W))
@@ -208,7 +213,7 @@ class CL1CSR() extends Module {
   val tvm         = WireInit(false.B)
   val mxr         = WireInit(false.B)
   val sum         = WireInit(false.B)
-  val mprv        = WireInit(false.B)
+  // val mprv        = WireInit(false.B)
   val xs          = WireInit(0.U(2.W))
   val fs          = WireInit(0.U(2.W))
   val vs          = WireInit(0.U(2.W))
@@ -220,7 +225,6 @@ class CL1CSR() extends Module {
   val sie         = WireInit(false.B)
   val wpri0       = WireInit(false.B)
 
-  val wen_mstatus = Wire(Bool())
   // val mpp_en      = cmt_status_en || cmt_mret_en
   // val mpp_n       = MuxCase(0.U, Seq(
   //                   cmt_status_en -> "b11".U,
@@ -228,21 +232,50 @@ class CL1CSR() extends Module {
   // ))
   // val mpp         = RegEnable(mpp_n, 0.U, mpp_en)
 
-  val mpp            = "b11".U
+  // only have M mode
+  // val mpp            = "b11".U
+
+  import PrivMode._
+
+  val mstatus_mpp    = Wire(Bool())
+  val priv_lvl_en    = cmt_status_en || cmt_mret_en
+  val priv_lvl_n     = MuxCase(false.B, Seq(
+                       cmt_status_en -> MMode,
+                       cmt_mret_en   -> mstatus_mpp
+  ))
+  val priv_lvl       = RegEnable(priv_lvl_n, MMode, priv_lvl_en)
+
+  val mstatus_mpp_en = csr_wen_mstatus || cmt_status_en || cmt_mret_en
+  val mstatus_mpp_n  = MuxCase(UMode, Seq(
+                       cmt_status_en  -> priv_lvl,
+                       cmt_mret_en    -> UMode,
+                       csr_wen_mstatus -> mstatus_wdat.mpp.andR
+  ))
+  mstatus_mpp        := RegEnable(mstatus_mpp_n, UMode, mstatus_mpp_en)
+  val mpp            = Fill(2,mstatus_mpp)
+
+  val mstatus_mprv    = WireInit(false.B)
+  val mstatus_mprv_en = csr_wen_mstatus ||  cmt_mret_en
+  val mpp_isnot_MMode = mstatus_mpp =/= MMode
+  val mstatus_mprv_n  = MuxCase(false.B, Seq(
+                        cmt_mret_en -> Mux(mpp_isnot_MMode, false.B, mstatus_mprv),
+                        csr_wen_mstatus -> mstatus_wdat.mprv
+  ))
+  val mprv            = mstatus_mprv
 
   val mpie        = Wire(Bool())
-  val mstatus_mie_en      = csrw_mstatus || cmt_status_en || cmt_mret_en
+  val mstatus_mie_en      = csr_wen_mstatus || cmt_status_en || cmt_mret_en
   val mstatus_mie_n       = MuxCase(0.U, Seq(
                             cmt_status_en -> false.B,
                             cmt_mret_en   -> mpie,
-                            csrw_mstatus  -> mstatus_wdat.mie
+                            csr_wen_mstatus  -> mstatus_wdat.mie
   ))
   val mstatus_mie         = RegEnable(mstatus_mie_n, false.B, mstatus_mie_en)
 
   val mpie_n      = MuxCase(false.B,Seq(
                     cmt_status_en -> mstatus_mie,
                     cmt_mret_en   -> true.B,
-                    csrw_mstatus  -> mstatus_wdat.mpie
+                    csr_wen_mstatus  -> mstatus_wdat.mpie
   ))
   val mpie_en     = mstatus_mie_en
   mpie            := RegEnable(mpie_n, false.B, mpie_en)
@@ -402,8 +435,7 @@ class CL1CSR() extends Module {
   wen_mcycleh    := getCSRWen(CSRs.mcycleh)
   wen_minstret   := getCSRWen(CSRs.minstret)
   wen_minstreth  := getCSRWen(CSRs.minstreth)
-  csrw_mstatus   := getCSRWen(CSRs.mstatus)
-  wen_mstatus    := csrw_mstatus || cmt_status_en || cmt_mret_en
+  csr_wen_mstatus   := getCSRWen(CSRs.mstatus)
   wen_mscratch   := getCSRWen(CSRs.mscratch)
 
   val csr_regs   = allCSRs.map {case (addr, reg) => reg}
