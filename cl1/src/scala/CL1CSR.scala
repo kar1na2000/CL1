@@ -68,6 +68,7 @@ class CSRIO() extends Bundle {
   val rdAddr = Input(UInt(12.W))
   val rdValue = Output(UInt(32.W))
   val privLvl = Output(UInt(2.W))
+  val mstatusTw = Output(Bool())
   val wrAddr = Input(UInt(12.W))
   val wrValue = Input(UInt(32.W))
   val wen    = Input(Bool())
@@ -202,7 +203,8 @@ class CL1CSR() extends Module {
   val sdt         = WireInit(false.B)
   val spelp       = WireInit(false.B)
   val tsr         = WireInit(false.B)
-  val tw          = WireInit(false.B)
+  val tw          = RegEnable(mstatus_wdat.tw, false.B, csr_wen_mstatus)
+  io.mstatusTw    := tw
   val tvm         = WireInit(false.B)
   val mxr         = WireInit(false.B)
   val sum         = WireInit(false.B)

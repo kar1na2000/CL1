@@ -97,6 +97,7 @@ class CL1Core extends Module {
 
   idStage.io.csrData  := csr.io.rdValue
   idStage.io.privLvl  := csr.io.privLvl
+  idStage.io.mstatusTw := csr.io.mstatusTw
   idStage.io.stall    := dx_stall
   idStage.io.flush    := pipe_flush
   idStage.io.memNotOutStanding := lsu.io.memNotOutStanding
@@ -151,8 +152,8 @@ class CL1Core extends Module {
   }
   excp.io.excp2Csr  <> csr.io.excp_intf
 
-  powerCtrl.io.dx_wfi := idStage.io.dx_wfi
-  powerCtrl.io.wb_wfi := wbStage.io.wb_wfi
+  powerCtrl.io.dx_wfi_sleep_req := idStage.io.dx_wfi_sleep_req
+  powerCtrl.io.wb_wfi_sleep_req := wbStage.io.wb_wfi_sleep_req
   powerCtrl.io.wfi_wakeup_req := excp.io.wfi_wakeup_req
   powerCtrl.io.ifu_idle := ifStage.io.ifu_idle
   io.core_wfi     := powerCtrl.io.core_sleep

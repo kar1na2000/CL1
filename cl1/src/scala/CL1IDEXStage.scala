@@ -74,11 +74,12 @@ class CL1IDEXStage extends Module with TrapCode {
     val csrAddr  = Output(UInt(12.W))
     val csrRen   = Output(Bool())
     val privLvl  = Input(UInt(2.W))
+    val mstatusTw = Input(Bool())
 
     val stall    = Input(Bool())
     val memNotOutStanding = Input(Bool())
     val valid    = Output(Bool())
-    val dx_wfi   = Output(Bool())
+    val dx_wfi_sleep_req = Output(Bool())
     val flush    = Input(Bool())
 
     val wen_x1   = Output(Bool())
@@ -142,6 +143,7 @@ class CL1IDEXStage extends Module with TrapCode {
   val jType = ctrl.jType
   val csrType = ctrl.csrType
   val privInstr = priv_dec(inst)
+  val dec_wfi = privInstr(4)
   val is_jalr = jType(1)
   val is_jal = jType(0)
   val isPRIV  = csrType.andR //TODO:
@@ -152,8 +154,10 @@ class CL1IDEXStage extends Module with TrapCode {
   val isCSRI  = csrType(CSRI_BIT)  && !isPRIV
   val csrWrites = isCSRRW || ((isCSRRC || isCSRRS) && rs1.orR)
   val isIllegalCSR = isCSR && CSRs.isIllegalCSR(csr_idx, io.privLvl, csrWrites)
+  val isIllegalUModeWfi = dec_wfi && io.mstatusTw && (io.privLvl =/= 3.U)
   val isFetchErr = io.pplIn.bits.ifu_fetch_err
-  val isIllegalInst = ctrl.illegal || io.pplIn.bits.rvcIllegal || (isPRIV && !privInstr.orR) || isIllegalCSR
+  val isIllegalInst = ctrl.illegal || io.pplIn.bits.rvcIllegal ||
+    (isPRIV && !privInstr.orR) || isIllegalCSR || isIllegalUModeWfi
   val aSel    = ctrl.aSel
   val bSel    = ctrl.bSel
 
@@ -431,8 +435,7 @@ class CL1IDEXStage extends Module with TrapCode {
   io.pplOut.bits := pplInfo
   io.valid := dx_valid
 
-  val dec_wfi = privInstr(4)
-  io.dx_wfi := dx_valid && dec_wfi && !dxHasTrap && !dx_flush
+  io.dx_wfi_sleep_req := dx_valid && dec_wfi && !dxHasTrap && !dx_flush
 
   if(MDU_CKG_EN) {
     val mdu_ck_en = BoringUtils.bore(mdu.mdu_ck_en)

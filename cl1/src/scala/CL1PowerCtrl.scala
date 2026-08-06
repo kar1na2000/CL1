@@ -3,8 +3,8 @@ import chisel3._
 import chisel3.util._
 
 class PowerCtrlIO extends Bundle {
-  val dx_wfi              = Input(Bool())
-  val wb_wfi              = Input(Bool())
+  val dx_wfi_sleep_req    = Input(Bool())
+  val wb_wfi_sleep_req    = Input(Bool())
   val wfi_wakeup_req      = Input(Bool())
   val ifu_idle            = Input(Bool())
   val icache_idle         = Input(Bool())
@@ -16,7 +16,7 @@ class PowerCtrlIO extends Bundle {
 class CL1PowerCtrl extends Module {
     val io = IO(new PowerCtrlIO)
 
-    val wfi_sleep_req = io.wb_wfi & ~io.wfi_wakeup_req
+    val wfi_sleep_req = io.wb_wfi_sleep_req & ~io.wfi_wakeup_req
     val ready_to_sleep = io.ifu_idle & io.icache_idle & io.dcache_idle
 
     // Power control logic
@@ -53,6 +53,6 @@ class CL1PowerCtrl extends Module {
     // Preventing younger instructions from being fetched lets the interrupt
     // path reuse the normal next-PC bookkeeping and save the architecturally
     // required mepc.
-    io.ifu_stall := io.dx_wfi | (stIsAwake & wfi_sleep_req) | stIsEnterAsleep | stIsAsleep
+    io.ifu_stall := io.dx_wfi_sleep_req | (stIsAwake & wfi_sleep_req) | stIsEnterAsleep | stIsAsleep
     io.core_sleep :=  stIsAsleep
 }

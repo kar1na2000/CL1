@@ -45,7 +45,7 @@ class CL1WBStage extends Module with TrapCode {
     val is_mem_load     = Output(Bool())
     val isEret    = Output(Bool())
     val wen_x1    = Output(Bool())
-    val wb_wfi    = Output(Bool())
+    val wb_wfi_sleep_req = Output(Bool())
     val spkDiffIo = if(difftest == true) Some(new spike_diff) else None
   })
 
@@ -169,7 +169,7 @@ class CL1WBStage extends Module with TrapCode {
   )
   io.toExcp.excp_tval  := io.pplIn.bits.trapValue
 
-  io.wb_wfi := wb_valid && wb_wfi & ~wbTrap
+  io.wb_wfi_sleep_req := wb_valid && wb_wfi & ~wbTrap
 
 
 // difftest
