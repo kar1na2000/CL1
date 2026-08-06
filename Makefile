@@ -103,7 +103,7 @@ all: verilog
 verilog: verilog-full-cache-axi
 
 verilog-full-cache-axi:
-	$(call gen_verilog,CL1_TEST_MODE=cache CL1_TOP_NAME=Cl1Top CL1_FORMAL_VERIF=false CL1_RISCV_FORMAL_ALTOPS=false,Cl1Top)
+	$(call gen_verilog,CL1_TEST_MODE=cache CL1_TOP_NAME=Cl1Top CL1_MDU_IMPL=fast_mul CL1_FORMAL_VERIF=false CL1_RISCV_FORMAL_ALTOPS=false,Cl1Top)
 
 # Full SoC tapeout/synthesis target: CX55 technology, foundry SRAM macros, no SOC diff port.
 verilog-full-soc-syn:
