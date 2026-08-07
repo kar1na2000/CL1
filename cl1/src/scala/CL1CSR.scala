@@ -250,13 +250,14 @@ class CL1CSR() extends Module {
   mstatus_mpp        := RegEnable(mstatus_mpp_n, UMode, mstatus_mpp_en)
   val mpp            = Fill(2,mstatus_mpp)
 
-  val mstatus_mprv    = WireInit(false.B)
+  val mstatus_mprv    = Wire(Bool())
   val mstatus_mprv_en = csr_wen_mstatus ||  cmt_mret_en
   val mpp_isnot_MMode = mstatus_mpp =/= MMode
   val mstatus_mprv_n  = MuxCase(false.B, Seq(
                         cmt_mret_en -> Mux(mpp_isnot_MMode, false.B, mstatus_mprv),
                         csr_wen_mstatus -> mstatus_wdat.mprv
   ))
+  mstatus_mprv        := RegEnable(mstatus_mprv_n, false.B, mstatus_mprv_en)
   val mprv            = mstatus_mprv
 
   val mpie        = Wire(Bool())
