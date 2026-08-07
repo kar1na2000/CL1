@@ -36,7 +36,7 @@ class excp2Csr extends Bundle {
     val meie        = Input(Bool())
     val msie        = Input(Bool())
     val mtie        = Input(Bool())
-    val mstatus_mie = Input(Bool())
+    val irq_enable  = Input(Bool())
     val mip         = Input(UInt(32.W))
     val mepc        = Input(UInt(32.W))
     val mcause      = Input(UInt(32.W))
@@ -79,7 +79,7 @@ class CL1EXCP() extends Module with TrapCode {
     val meie    = io.excp2Csr.meie
     val msie    = io.excp2Csr.msie
     val mtie    = io.excp2Csr.mtie
-    val mstatus_mie = io.excp2Csr.mstatus_mie
+    val irq_enable = io.excp2Csr.irq_enable
     val mip     = io.excp2Csr.mip
     val mepc    = io.excp2Csr.mepc
     val mcause  = io.excp2Csr.mcause
@@ -107,7 +107,7 @@ class CL1EXCP() extends Module with TrapCode {
     val irq_req_raw =   meip & meie |
                         msip & msie |
                         mtip & mtie
-    val irq_mask    =   ~mstatus_mie | debug_irq_mask
+    val irq_mask    =   ~irq_enable | debug_irq_mask
     val irq_req     =  irq_req_raw & ~irq_mask
     // MEI > MSI > MTI for simultaneously enabled & pending M-mode interrupts.
     val irq_casue   =  MuxCase(0.U, Seq(

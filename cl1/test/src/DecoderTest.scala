@@ -146,7 +146,7 @@ class EXCPIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester 
       dut.io.excp2Csr.meie.poke(false.B)
       dut.io.excp2Csr.msie.poke(false.B)
       dut.io.excp2Csr.mtie.poke(false.B)
-      dut.io.excp2Csr.mstatus_mie.poke(false.B)
+      dut.io.excp2Csr.irq_enable.poke(false.B)
       dut.io.excp2Csr.mip.poke(0.U)
       dut.io.excp2Csr.mepc.poke(0.U)
       dut.io.excp2Csr.mcause.poke(0.U)

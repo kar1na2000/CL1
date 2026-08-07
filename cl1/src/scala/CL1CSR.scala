@@ -262,10 +262,10 @@ class CL1CSR() extends Module {
 
   val mpie        = Wire(Bool())
   val mstatus_mie_en      = csr_wen_mstatus || cmt_status_en || cmt_mret_en
-  val mstatus_mie_n       = MuxCase(0.U, Seq(
+  val mstatus_mie_n       = MuxCase(false.B, Seq(
                             cmt_status_en -> false.B,
                             cmt_mret_en   -> mpie,
-                            csr_wen_mstatus  -> mstatus_wdat.mie
+                            csr_wen_mstatus  -> mstatus_wdat.mie.asBool
   ))
   val mstatus_mie         = RegEnable(mstatus_mie_n, false.B, mstatus_mie_en)
 
@@ -443,7 +443,7 @@ class CL1CSR() extends Module {
   io.excp_intf.mtvec := mtvec
   io.excp_intf.mepc  := mepc
   io.excp_intf.mcause := mcause
-  io.excp_intf.mstatus_mie := mstatus_mie
+  io.excp_intf.irq_enable := mstatus_mie || (priv_lvl === UMode)
   io.excp_intf.meie  := meie
   io.excp_intf.msie  := msie
   io.excp_intf.mtie  := mtie
