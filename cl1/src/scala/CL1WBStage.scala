@@ -157,7 +157,6 @@ class CL1WBStage extends Module with TrapCode {
   io.dbg.wb_pc      := pplIn.pc
   io.dbg.wb_commit  := wb_commit
 
-  io.toExcp.cmt_ecall := isValidEcall
   io.toExcp.cmt_mret  := isValidEret
   io.toExcp.wb_valid  := wb_valid
   io.toExcp.wb_pc     := wb_pc

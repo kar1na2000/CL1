@@ -144,6 +144,7 @@ class CL1IDEXStage extends Module with TrapCode {
   val csrType = ctrl.csrType
   val privInstr = priv_dec(inst)
   val dec_wfi = privInstr(4)
+  val dec_ecall = privInstr(3)
   val dec_mret = privInstr(1)
   val is_jalr = jType(1)
   val is_jal = jType(0)
@@ -158,6 +159,9 @@ class CL1IDEXStage extends Module with TrapCode {
   val isIllegalUModeWfi = dec_wfi && io.mstatusTw && (io.privLvl =/= 3.U)
   val isIllegalUModeMret = dec_mret && (io.privLvl =/= 3.U)
   val isIllegalUModeInstr = isIllegalUModeWfi || isIllegalUModeMret
+  val isUModeEcall = dec_ecall && (io.privLvl === 0.U)
+  val isMModeEcall = dec_ecall && (io.privLvl === 3.U)
+  val isEcall = isUModeEcall || isMModeEcall
   val isFetchErr = io.pplIn.bits.ifu_fetch_err
   val isIllegalInst = ctrl.illegal || io.pplIn.bits.rvcIllegal ||
     (isPRIV && !privInstr.orR) || isIllegalCSR || isIllegalUModeInstr
@@ -218,7 +222,7 @@ class CL1IDEXStage extends Module with TrapCode {
   val mem_is_half = ctrl.memType(2, 1) === "b10".U
   val mem_is_word = ctrl.memType(2, 1) === "b11".U
   val mem_misaligned = is_mem && ((mem_is_half && mem_addr(0) =/= 0.U) || (mem_is_word && mem_addr(1, 0) =/= 0.U))
-  val dxHasTrap = isFetchErr || isIllegalInst || mem_misaligned
+  val dxHasTrap = isFetchErr || isIllegalInst || mem_misaligned || isEcall
 
   val csrRden  = dx_valid & !dxHasTrap & (isCSRRW & rd.orR | ( isCSRRC | isCSRRS ))  & ~dx_stall & ~dx_flush
   val csrWren  = dx_valid & !dxHasTrap & csrWrites  & ~dx_stall & ~dx_flush
@@ -425,12 +429,15 @@ class CL1IDEXStage extends Module with TrapCode {
   pplInfo.trapCode := MuxCase(0.U(8.W), Seq(
     isFetchErr     -> INST_ACCESS_EXPT(7,0),
     isIllegalInst  -> INST_ILLEGAL_EXPT(7,0),
-    mem_misaligned -> Mux(is_store, STORE_MISALIGNED_EXPT(7,0), LOAD_MISALIGNED_EXPT(7,0))
+    mem_misaligned -> Mux(is_store, STORE_MISALIGNED_EXPT(7,0), LOAD_MISALIGNED_EXPT(7,0)),
+    isUModeEcall   -> U_ECALL_EXPT(7,0),
+    isMModeEcall   -> M_ECALL_EXPT(7,0)
   ))
   pplInfo.trapValue := MuxCase(0.U(32.W), Seq(
     isFetchErr     -> io.pplIn.bits.pc,
     isIllegalInst  -> Mux(io.pplIn.bits.rvcIllegal, ZeroExt(io.pplIn.bits.cInst, 32), inst),
-    is_mem         -> mem_addr
+    mem_misaligned -> mem_addr,
+    isEcall        -> 0.U(32.W)
   ))
   pplInfo.dx_ready := ready_go
 

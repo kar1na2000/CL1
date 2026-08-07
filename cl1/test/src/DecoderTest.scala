@@ -98,6 +98,50 @@ class IDEXIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester 
   }
 }
 
+class IDEXEcallExceptionTest extends AnyFreeSpec with ChiselScalatestTester {
+  "ECALL trap code follows the current privilege mode and exception priority" in {
+    test(new CL1IDEXStage()) { dut =>
+      dut.io.pplIn.valid.poke(true.B)
+      dut.io.pplIn.bits.pc.poke("h80000028".U)
+      dut.io.pplIn.bits.inst.poke("h00000073".U)
+      dut.io.pplIn.bits.prdt_taken.poke(0.U)
+      dut.io.pplIn.bits.cInst.poke(0.U)
+      dut.io.pplIn.bits.isCInst.poke(false.B)
+      dut.io.pplIn.bits.rvcIllegal.poke(false.B)
+      dut.io.pplIn.bits.ifu_fetch_err.poke(false.B)
+      dut.io.pplIn.bits.muldiv_b2b.poke(false.B)
+
+      dut.io.pplOut.ready.poke(true.B)
+      dut.io.mem.ready.poke(true.B)
+      dut.io.rs1Value.poke(0.U)
+      dut.io.rs2Value.poke(0.U)
+      dut.io.csrData.poke(0.U)
+      dut.io.mstatusTw.poke(false.B)
+      dut.io.memNotOutStanding.poke(true.B)
+      dut.io.stall.poke(false.B)
+      dut.io.flush.poke(false.B)
+      dut.io.icache_req.ready.poke(true.B)
+      dut.io.dcache_req.ready.poke(true.B)
+
+      dut.io.privLvl.poke(0.U)
+      dut.io.pplOut.bits.isTrap.expect(true.B)
+      dut.io.pplOut.bits.trapCode.expect(8.U)
+      dut.io.pplOut.bits.trapValue.expect(0.U)
+      dut.io.pplOut.bits.wen.expect(false.B)
+      dut.io.pplOut.bits.csrWen.expect(false.B)
+      dut.io.mem.valid.expect(false.B)
+
+      dut.io.privLvl.poke(3.U)
+      dut.io.pplOut.bits.trapCode.expect(11.U)
+      dut.io.pplOut.bits.trapValue.expect(0.U)
+
+      dut.io.pplIn.bits.ifu_fetch_err.poke(true.B)
+      dut.io.pplOut.bits.trapCode.expect(1.U)
+      dut.io.pplOut.bits.trapValue.expect("h80000028".U)
+    }
+  }
+}
+
 class IDEXFetchExceptionTest extends AnyFreeSpec with ChiselScalatestTester {
   "fetch error enters the WB instruction access fault path without side effects" in {
     test(new CL1IDEXStage()) { dut =>
@@ -157,7 +201,6 @@ class EXCPIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester 
       dut.io.dbg2excp.ebrk_excp_en.poke(false.B)
       dut.io.dbg2excp.debug_take_req.poke(false.B)
 
-      dut.io.wb2Excp.cmt_ecall.poke(false.B)
       dut.io.wb2Excp.cmt_mret.poke(false.B)
       dut.io.wb2Excp.cmt_wfi.poke(false.B)
       dut.io.wb2Excp.wb_valid.poke(true.B)

@@ -23,7 +23,6 @@ trait TrapCode {
 }
 
 class wb2Excp extends Bundle {
-    val cmt_ecall     = Input(Bool())
     val cmt_mret      = Input(Bool())
     val wb_valid      = Input(Bool())
     val wb_pc         = Input(UInt(32.W))
@@ -87,7 +86,6 @@ class CL1EXCP() extends Module with TrapCode {
     val next_pc   = io.next_pc
     val dx_valid = io.dx_valid
 
-    val cmt_ecall       = io.wb2Excp.cmt_ecall
     val cmt_mret        = io.wb2Excp.cmt_mret
     val ebrk_excp_en    = io.dbg2excp.ebrk_excp_en
     val wb_valid        = io.wb2Excp.wb_valid
@@ -116,12 +114,11 @@ class CL1EXCP() extends Module with TrapCode {
                         (mtip & mtie) -> M_TIMER_IRQ
     ))
 
-    val excp_req    = cmt_ecall | ebrk_excp_en | excp_valid
+    val excp_req    = ebrk_excp_en | excp_valid
     val excp_csr_save_en = excp_req
     val excp_cause       = MuxCase(0.U, Seq(
                             excp_valid   -> Cat(0.U(24.W), excp_code_raw),
-                            ebrk_excp_en -> BREAKPOINT_EXPT,
-                            cmt_ecall    -> M_ECALL_EXPT
+                            ebrk_excp_en -> BREAKPOINT_EXPT
                         ))
     val trap_exit_en     = cmt_mret
     val irq_csr_save_en      = Wire(Bool())
