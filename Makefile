@@ -115,7 +115,7 @@ verilog-full-soc-diff:
 
 # AXI master interface, normal MDU, no ICache/DCache.
 verilog-no-cache:
-	$(call gen_verilog,CL1_TEST_MODE=cache CL1_TOP_NAME=Cl1Top_NoCache CL1_FORMAL_VERIF=false CL1_RISCV_FORMAL_ALTOPS=false CL1_HAS_ICACHE=false CL1_HAS_DCACHE=false,Cl1Top_NoCache)
+	$(call gen_verilog,CL1_TEST_MODE=cache CL1_TOP_NAME=Cl1Top_NoCache CL1_MDU_IMPL=fast_mul CL1_FORMAL_VERIF=false CL1_RISCV_FORMAL_ALTOPS=false CL1_HAS_ICACHE=false CL1_HAS_DCACHE=false,Cl1Top_NoCache)
 
 # RVFI with riscv-formal M-extension alternative ops, CoreBus exposed, no cache.
 verilog-rvfi:
