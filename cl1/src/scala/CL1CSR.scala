@@ -83,7 +83,7 @@ class CSRIO() extends Bundle {
   val dbg_intf = Flipped(new Dbg2CsrSignal)
   val excp_intf = Flipped(new excp2Csr)
 
-  val wb_commit = Input(Bool())
+  val wb_retire = Input(Bool())
 }
 
 
@@ -366,9 +366,10 @@ class CL1CSR() extends Module {
   val mcycleh   = RegEnable(mcycleh_wdata, 0.U(32.W), wen_mcycleh || mcycle_carry)
   mcycleh_wdata := Mux(wen_mcycleh, csr_wdat, (mcycleh + 1.U(32.W)))
 
+  val minstret_inc = io.wb_retire && !wen_minstret
   val minstret_wdata = Wire(UInt(32.W))
-  val minstret  = RegEnable(minstret_wdata, 0.U(32.W), wen_minstret || io.wb_commit)
-  val minstret_carry = io.wb_commit && !wen_minstret && minstret === "hffffffff".U
+  val minstret  = RegEnable(minstret_wdata, 0.U(32.W), wen_minstret || minstret_inc)
+  val minstret_carry = minstret_inc && minstret === "hffffffff".U
   minstret_wdata := Mux(wen_minstret, csr_wdat, (minstret + 1.U(32.W)))
 
   val minstreth_wdata = Wire(UInt(32.W))

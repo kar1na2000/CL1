@@ -40,6 +40,7 @@ class CL1WBStage extends Module with TrapCode {
     val csr_idx    = Output(UInt(12.W))
     val valid      = Output(Bool())
     val commit     = Output(Bool())
+    val retire     = Output(Bool())
     val cInst     = Output(UInt(16.W))
     val inst       = Output(UInt(32.W))
     val is_mem_load     = Output(Bool())
@@ -124,9 +125,12 @@ class CL1WBStage extends Module with TrapCode {
   ))
   
   val ready_go  = if(WB_PIPESTAGE) wb_ready_go else dxwb_ready
+  // Keep commit as WB completion for Debug/RVFI; retire drives architectural counters.
   val wb_commit = wb_valid && ready_go && !io.flush
   val wbTrap = (pplIn.isTrap || is_valid_mem_err) && wb_valid
+  val wb_retire = wb_commit && !wbTrap && !isEbreak
   io.commit := wb_commit
+  io.retire := wb_retire
 
   val wen = pplIn.wen
   io.wen := wb_commit && wen && !is_valid_mem_err

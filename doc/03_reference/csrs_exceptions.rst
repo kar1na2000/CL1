@@ -56,7 +56,9 @@ read-only ID CSRs.
 
 The counter CSRs ``mcycle``, ``minstret``, ``mcycleh``, and ``minstreth`` are
 read/write registers.  ``mcycle`` increments each cycle unless explicitly
-written, and ``minstret`` increments on writeback commit.
+written, and ``minstret`` increments only when an instruction retires.
+Instructions that raise synchronous exceptions, including ``ecall`` and
+``ebreak``, do not increment ``minstret``.
 
 The read-only ID CSRs ``mvendorid``, ``marchid``, ``mimpid``, ``mhartid``, and
 ``mconfigptr`` are present.  ``marchid`` is ``5`` and the other implemented ID

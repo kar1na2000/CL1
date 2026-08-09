@@ -114,7 +114,7 @@ class CL1Core extends Module {
   csr.io.ext_irq := io.ext_irq
   csr.io.sft_irq := io.sft_irq
   csr.io.tmr_irq := io.tmr_irq
-  csr.io.wb_commit := wbStage.io.commit
+  csr.io.wb_retire := wbStage.io.retire
 
   dm.io.dbg2csr <> csr.io.dbg_intf
 

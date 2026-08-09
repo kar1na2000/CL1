@@ -182,10 +182,6 @@ class EXCPIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester 
     test(new CL1EXCP()) { dut =>
       dut.io.next_pc.poke(0.U)
       dut.io.dx_valid.poke(false.B)
-      dut.io.ifu_halt_ack.poke(true.B)
-      dut.io.dxu_halt_ack.poke(true.B)
-      dut.io.icache_idle.poke(true.B)
-      dut.io.dcache_idle.poke(true.B)
 
       dut.io.excp2Csr.meie.poke(false.B)
       dut.io.excp2Csr.msie.poke(false.B)
@@ -202,7 +198,6 @@ class EXCPIllegalInstructionTest extends AnyFreeSpec with ChiselScalatestTester 
       dut.io.dbg2excp.debug_take_req.poke(false.B)
 
       dut.io.wb2Excp.cmt_mret.poke(false.B)
-      dut.io.wb2Excp.cmt_wfi.poke(false.B)
       dut.io.wb2Excp.wb_valid.poke(true.B)
       dut.io.wb2Excp.wb_pc.poke("h80000020".U)
       dut.io.wb2Excp.excp_valid.poke(true.B)
